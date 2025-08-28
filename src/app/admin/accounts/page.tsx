@@ -29,6 +29,8 @@ interface AccountFormData {
   username: string
   password: string
   bankId: number
+  autoSync: boolean
+  isActive: boolean
 }
 
 interface CronFormData {
@@ -64,7 +66,7 @@ export default function AccountsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSyncSubmitting, setIsSyncSubmitting] = useState(false)
 
-  const { register: registerAccount, handleSubmit: handleAccountSubmit, reset: resetAccount, formState: { errors: accountErrors } } = useForm<AccountFormData>()
+  const { register: registerAccount, handleSubmit: handleAccountSubmit, reset: resetAccount, watch: watchAccount, setValue: setValueAccount, formState: { errors: accountErrors } } = useForm<AccountFormData>()
   const { register: registerCron, handleSubmit: handleCronSubmit, reset: resetCron, watch: watchCron, setValue: setCronValue, formState: { errors: cronErrors } } = useForm<CronFormData>()
 
   useEffect(() => {
@@ -130,6 +132,13 @@ export default function AccountsPage() {
   const onSubmitAccount = async (data: AccountFormData) => {
     try {
       setIsSubmitting(true)
+      
+      // Validate bankId
+      if (!data.bankId) {
+        console.error('Please select a bank')
+        return
+      }
+      
       // Note: This would need to be implemented in the API service
       console.log('Creating account:', data)
       // await apiService.createAccount(data)
@@ -148,6 +157,18 @@ export default function AccountsPage() {
 
     try {
       setIsSubmitting(true)
+      
+      // Validate required fields
+      if (data.isActive && !data.cronExpression) {
+        console.error('Please select a sync frequency')
+        return
+      }
+      
+      if (data.isActive && !data.browserType) {
+        console.error('Please select a browser type')
+        return
+      }
+      
       // Note: This uses the existing API method from the documentation
       // await apiService.updateScrapingOptions(selectedAccountForCron.id, data)
       console.log('Updating cron settings:', data)
@@ -493,10 +514,8 @@ export default function AccountsPage() {
                     label: `${bank.fullName} (${bank.code})`
                   }))}
                   label="Bank Institution"
-                  {...registerAccount('bankId', { 
-                    required: 'Please select a bank',
-                    valueAsNumber: true
-                  })}
+                  value={watchAccount('bankId')?.toString() || ''}
+                  onChange={(value) => setValueAccount('bankId', parseInt(value as string))}
                   error={accountErrors.bankId?.message}
                 />
 
@@ -583,7 +602,7 @@ export default function AccountsPage() {
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      {...registerAccount('isActive')}
+                      {...registerAccount('autoSync')}
                       className="rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
                       defaultChecked
                     />
@@ -665,27 +684,29 @@ export default function AccountsPage() {
                 {/* Cron Expression */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Select
-                    label="Sync Frequency"
-                    options={[
-                      { value: '0 */1 * * *', label: 'Every Hour' },
-                      { value: '0 */2 * * *', label: 'Every 2 Hours' },
-                      { value: '0 */3 * * *', label: 'Every 3 Hours' },
-                      { value: '0 */6 * * *', label: 'Every 6 Hours' },
-                      { value: '0 */12 * * *', label: 'Every 12 Hours' },
-                      { value: '0 0 * * *', label: 'Daily at Midnight' },
-                      { value: '0 9 * * *', label: 'Daily at 9 AM' }
-                    ]}
-                    {...registerCron('cronExpression', { required: 'Cron expression is required' })}
-                    error={cronErrors.cronExpression?.message}
-                  />
+                  label="Sync Frequency"
+                  value={watchCron('cronExpression') || ''}
+                  onChange={(value) => setCronValue('cronExpression', value as string)}
+                  options={[
+                    { value: '0 */1 * * *', label: 'Every Hour' },
+                    { value: '0 */2 * * *', label: 'Every 2 Hours' },
+                    { value: '0 */3 * * *', label: 'Every 3 Hours' },
+                    { value: '0 */6 * * *', label: 'Every 6 Hours' },
+                    { value: '0 */12 * * *', label: 'Every 12 Hours' },
+                    { value: '0 0 * * *', label: 'Daily at Midnight' },
+                    { value: '0 9 * * *', label: 'Daily at 9 AM' }
+                  ]}
+                  error={cronErrors.cronExpression?.message}
+                />
 
                   <Select
                     label="Browser Type"
+                    value={watchCron('browserType') || ''}
+                    onChange={(value) => setCronValue('browserType', value as 'chrome' | 'firefox')}
                     options={[
                       { value: 'chrome', label: 'Chrome' },
                       { value: 'firefox', label: 'Firefox' }
                     ]}
-                    {...registerCron('browserType', { required: 'Browser type is required' })}
                     error={cronErrors.browserType?.message}
                   />
                 </div>

@@ -122,7 +122,7 @@ export interface SyncEvent {
   syncId: string
   timestamp: string
   message: string
-  data?: any
+  data?: unknown
 }
 
 export interface SyncStartedEvent extends SyncEvent {
@@ -143,7 +143,7 @@ export interface SyncProgressEvent extends SyncEvent {
 
 export interface SyncCompletedEvent extends SyncEvent {
   success: boolean
-  summary?: any
+  summary?: unknown
 }
 
 export interface SyncErrorEvent extends SyncEvent {

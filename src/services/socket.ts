@@ -2,7 +2,6 @@
 
 import { io, Socket } from 'socket.io-client'
 import type {
-  SyncEvent,
   SyncStartedEvent,
   SyncProgressEvent,
   SyncCompletedEvent,
@@ -21,7 +20,7 @@ export interface SocketEventHandlers {
   onBatchSyncCompleted?: (data: SyncCompletedEvent) => void
 }
 
-type EventHandler = (data: any) => void
+type EventHandler = (data: unknown) => void
 
 interface SocketEvents {
   [event: string]: EventHandler[]
@@ -35,7 +34,7 @@ class SocketService {
   private handlers: SocketEventHandlers = {}
   private events: SocketEvents = {}
   private connected = false
-  private simulatedEvents: any = null
+  private simulatedEvents: unknown = null
 
   connect(token?: string): Promise<Socket> | void {
     // For demo purposes, simulate connection without real Socket.IO
@@ -130,18 +129,18 @@ class SocketService {
       })
 
       // Screenshot preview events
-      this.socket.on('automation_preview', (data: any) => {
+      this.socket.on('automation_preview', (data: { message: string; [key: string]: unknown }) => {
         console.log(`📸 Screenshot: ${data.message}`)
         this.emit('automation_preview', data)
       })
 
-      this.socket.on('automation_preview_stopped', (data: any) => {
+      this.socket.on('automation_preview_stopped', (data: { message: string; [key: string]: unknown }) => {
         console.log(`📸 Preview Stopped: ${data.message}`)
         this.emit('automation_preview_stopped', data)
       })
 
       // Batch sync error
-      this.socket.on('batch_sync_error', (data: any) => {
+      this.socket.on('batch_sync_error', (data: { message: string; [key: string]: unknown }) => {
         console.log(`❌ Batch Error: ${data.message}`)
         this.emit('batch_sync_error', data)
       })
@@ -174,7 +173,7 @@ class SocketService {
     }
   }
 
-  emit(event: string, data: any) {
+  emit(event: string, data: unknown) {
     if (this.events[event]) {
       this.events[event].forEach(handler => handler(data))
     }

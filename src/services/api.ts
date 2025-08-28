@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import type { 
   ApiResponse, 
   User, 
@@ -196,14 +196,14 @@ class ApiService {
     accounts: Account[]
     flags: string[]
     pagination: PaginationInfo
-    filters: any
+    filters: Record<string, unknown>
   }>> {
     const response = await this.api.get<ApiResponse<{
       transactions: Transaction[]
       accounts: Account[]
       flags: string[]
       pagination: PaginationInfo
-      filters: any
+      filters: Record<string, unknown>
     }>>('/api/transactions', { params })
     return response.data
   }

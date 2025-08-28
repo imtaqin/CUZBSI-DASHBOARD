@@ -21,7 +21,7 @@ export interface LogEntry {
     total: number
     percentage: number
   }
-  data?: any
+  data?: unknown
 }
 
 export function useRealTimeLogs() {

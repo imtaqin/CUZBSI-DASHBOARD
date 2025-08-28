@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '@/compo
 import { useRealTimeLogs } from '@/hooks/useRealTimeLogs'
 import { formatRelativeTime } from '@/lib/utils'
 import { apiService } from '@/services/api'
+import type { Account } from '@/types'
 import {
   PlayIcon,
   PauseIcon,
@@ -32,7 +33,7 @@ export default function RealTimeLogsPage() {
   
   const [isAutoScroll, setIsAutoScroll] = useState(true)
   const [filter, setFilter] = useState<string>('all')
-  const [accounts, setAccounts] = useState<any[]>([])
+  const [accounts, setAccounts] = useState<Account[]>([])
   
   const logsEndRef = useRef<HTMLDivElement>(null)
   const logsContainerRef = useRef<HTMLDivElement>(null)
