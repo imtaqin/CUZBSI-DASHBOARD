@@ -209,7 +209,15 @@ class ApiService {
   }
 
   async flagTransaction(id: number, flag: string): Promise<ApiResponse<null>> {
-    const response = await this.api.post<ApiResponse<null>>(`/api/transactions/${id}/flag`, { flag })
+    const response = await this.api.put(`/transactions/${id}/flag`, { flag })
+    return response.data
+  }
+
+  async updateTransactionFlag(id: number, data: {
+    flagId?: string
+    notes?: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put(`/transactions/${id}/flag`, data)
     return response.data
   }
 

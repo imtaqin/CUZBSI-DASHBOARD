@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CUZBSI Admin Panel",
-  description: "Bank Syariah Indonesia (BSI) Transaction Management System",
+  title: "Panel Admin CUZBSI",
+  description: "Sistem Manajemen Transaksi Bank Syariah Indonesia (BSI)",
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="id">
       <body 
         className={`${inter.variable} font-sans antialiased`}
         suppressHydrationWarning={true}

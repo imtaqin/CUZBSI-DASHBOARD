@@ -284,20 +284,20 @@ export default function AccountsPage() {
 
   if (isLoading) {
     return (
-      <AdminLayout title="Accounts" description="Manage BSI accounts and sync settings">
-        <LoadingPage text="Loading accounts..." />
+      <AdminLayout title="Akun" description="Kelola akun BSI dan pengaturan sinkronisasi">
+        <LoadingPage text="Memuat akun..." />
       </AdminLayout>
     )
   }
 
   return (
-    <AdminLayout title="Accounts" description="Manage BSI accounts and sync settings">
+    <AdminLayout title="Akun" description="Kelola akun BSI dan pengaturan sinkronisasi">
       <div className="space-y-6">
         {/* Header Actions */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="text-sm text-slate-400">
-              {accounts.length} accounts • {accounts.filter(a => a.isActive).length} active
+              {accounts.length} akun • {accounts.filter(a => a.isActive).length} aktif
             </div>
           </div>
 
@@ -308,11 +308,11 @@ export default function AccountsPage() {
               className="flex items-center"
             >
               <PlusIcon className="h-4 w-4 mr-2" />
-              Add Account
+              Tambah Akun
             </Button>
             <Button onClick={handleSyncAll} className="flex items-center">
               <RocketLaunchIcon className="h-4 w-4 mr-2" />
-              Sync All Accounts
+              Sinkronisasi Semua Akun
             </Button>
           </div>
         </div>
@@ -322,20 +322,20 @@ export default function AccountsPage() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <BuildingLibraryIcon className="h-5 w-5 mr-2" />
-              BSI Accounts
+              Akun BSI
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Account</TableHead>
+                  <TableHead>Akun</TableHead>
                   <TableHead>Bank</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Sync Status</TableHead>
-                  <TableHead>Last Sync</TableHead>
-                  <TableHead>Schedule</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Saldo</TableHead>
+                  <TableHead>Status Sinkronisasi</TableHead>
+                  <TableHead>Sinkronisasi Terakhir</TableHead>
+                  <TableHead>Jadwal</TableHead>
+                  <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -345,10 +345,10 @@ export default function AccountsPage() {
                       <div>
                         <div className="font-medium">{account.accountNumber}</div>
                         <div className="text-sm text-gray-500">
-                          Company ID: {account.companyId}
+                          ID Perusahaan: {account.companyId}
                         </div>
                         <div className="text-sm text-gray-500">
-                          User: {account.username}
+                          Pengguna: {account.username}
                         </div>
                       </div>
                     </TableCell>
@@ -384,11 +384,11 @@ export default function AccountsPage() {
                             {account.ScrapingOption.cronExpression}
                           </div>
                           <div className="text-gray-500">
-                            {account.ScrapingOption.isActive ? 'Enabled' : 'Disabled'}
+                            {account.ScrapingOption.isActive ? 'Aktif' : 'Nonaktif'}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-sm">No schedule</span>
+                        <span className="text-gray-400 text-sm">Tidak ada jadwal</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -401,13 +401,13 @@ export default function AccountsPage() {
                           disabled={!account.isActive}
                         >
                           <PlayIcon className="h-4 w-4 mr-1" />
-                          Sync
+                          Sinkronisasi
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditCron(account)}
-                          title="Manage Cron Schedule"
+                          title="Kelola Jadwal Cron"
                         >
                           <CogIcon className="h-4 w-4" />
                         </Button>
@@ -421,8 +421,8 @@ export default function AccountsPage() {
             {accounts.length === 0 && (
               <div className="text-center py-8 text-slate-400">
                 <BuildingLibraryIcon className="h-12 w-12 mx-auto mb-4 text-slate-500" />
-                <p>No accounts found</p>
-                <p className="text-sm">Contact your administrator to add BSI accounts</p>
+                <p>Tidak ada akun ditemukan</p>
+                <p className="text-sm">Hubungi administrator untuk menambahkan akun BSI</p>
               </div>
             )}
           </CardContent>
@@ -486,7 +486,7 @@ export default function AccountsPage() {
             setIsAccountModalOpen(false)
             resetAccount()
           }}
-          title="Add New BSI Account"
+          title="Tambah Akun BSI Baru"
           size="lg"
         >
           <form onSubmit={handleAccountSubmit(onSubmitAccount)} className="space-y-6">
@@ -495,9 +495,9 @@ export default function AccountsPage() {
               <div className="flex items-center">
                 <BuildingLibraryIcon className="h-8 w-8 text-blue-500 mr-3" />
                 <div>
-                  <h3 className="text-lg font-medium text-white">BSI Account Integration</h3>
+                  <h3 className="text-lg font-medium text-white">Integrasi Akun BSI</h3>
                   <p className="text-sm text-slate-400 mt-1">
-                    Add a new Bank Syariah Indonesia account for automatic transaction synchronization
+                    Tambahkan akun Bank Syariah Indonesia baru untuk sinkronisasi transaksi otomatis
                   </p>
                 </div>
               </div>
@@ -506,63 +506,63 @@ export default function AccountsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Bank Selection */}
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Bank Information</h4>
+                <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Informasi Bank</h4>
                 
                 <Select
                   options={banks.map(bank => ({
                     value: bank.id.toString(),
                     label: `${bank.fullName} (${bank.code})`
                   }))}
-                  label="Bank Institution"
+                  label="Institusi Bank"
                   value={watchAccount('bankId')?.toString() || ''}
                   onChange={(value) => setValueAccount('bankId', parseInt(value as string))}
                   error={accountErrors.bankId?.message}
                 />
 
                 <Input
-                  label="Account Number"
+                  label="Nomor Rekening"
                   {...registerAccount('accountNumber', { 
-                    required: 'Account number is required',
+                    required: 'Nomor rekening wajib diisi',
                     pattern: {
                       value: /^[0-9]{10,20}$/,
-                      message: 'Please enter a valid account number (10-20 digits)'
+                      message: 'Masukkan nomor rekening yang valid (10-20 digit)'
                     }
                   })}
                   error={accountErrors.accountNumber?.message}
-                  placeholder="e.g., 1234567890123456"
+                  placeholder="contoh: 1234567890123456"
                 />
 
                 <Input
-                  label="Company ID"
-                  {...registerAccount('companyId', { required: 'Company ID is required' })}
+                  label="ID Perusahaan"
+                  {...registerAccount('companyId', { required: 'ID Perusahaan wajib diisi' })}
                   error={accountErrors.companyId?.message}
-                  placeholder="Enter company identifier"
+                  placeholder="Masukkan identifikasi perusahaan"
                 />
               </div>
 
               {/* Credentials */}
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">BSI Credentials</h4>
+                <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Kredensial BSI</h4>
                 
                 <Input
-                  label="Username"
-                  {...registerAccount('username', { required: 'Username is required' })}
+                  label="Nama Pengguna"
+                  {...registerAccount('username', { required: 'Nama pengguna wajib diisi' })}
                   error={accountErrors.username?.message}
-                  placeholder="BSI username"
+                  placeholder="Nama pengguna BSI"
                 />
 
                 <Input
-                  label="Password"
+                  label="Kata Sandi"
                   type="password"
                   {...registerAccount('password', { 
-                    required: 'Password is required',
+                    required: 'Kata sandi wajib diisi',
                     minLength: {
                       value: 6,
-                      message: 'Password must be at least 6 characters'
+                      message: 'Kata sandi minimal 6 karakter'
                     }
                   })}
                   error={accountErrors.password?.message}
-                  placeholder="BSI password"
+                  placeholder="Kata sandi BSI"
                 />
 
                 {/* Security Note */}
@@ -570,9 +570,9 @@ export default function AccountsPage() {
                   <div className="flex">
                     <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-yellow-400">Security Notice</p>
+                      <p className="text-sm font-medium text-yellow-400">Pemberitahuan Keamanan</p>
                       <p className="text-xs text-yellow-300 mt-1">
-                        Credentials are encrypted and stored securely. Only authorized personnel can access this information.
+                        Kredensial dienkripsi dan disimpan dengan aman. Hanya personel yang berwenang yang dapat mengakses informasi ini.
                       </p>
                     </div>
                   </div>
@@ -582,7 +582,7 @@ export default function AccountsPage() {
 
             {/* Additional Settings */}
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Sync Settings</h4>
+              <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Pengaturan Sinkronisasi</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -593,9 +593,9 @@ export default function AccountsPage() {
                       className="rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
                       defaultChecked
                     />
-                    <span className="ml-2 text-sm text-white">Enable automatic sync</span>
+                    <span className="ml-2 text-sm text-white">Aktifkan sinkronisasi otomatis</span>
                   </label>
-                  <p className="text-xs text-slate-400 ml-6">Automatically fetch new transactions daily</p>
+                  <p className="text-xs text-slate-400 ml-6">Ambil transaksi baru secara otomatis setiap hari</p>
                 </div>
 
                 <div className="space-y-2">
@@ -606,9 +606,9 @@ export default function AccountsPage() {
                       className="rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
                       defaultChecked
                     />
-                    <span className="ml-2 text-sm text-white">Account active</span>
+                    <span className="ml-2 text-sm text-white">Akun aktif</span>
                   </label>
-                  <p className="text-xs text-slate-400 ml-6">Account is active and ready to use</p>
+                  <p className="text-xs text-slate-400 ml-6">Akun aktif dan siap digunakan</p>
                 </div>
               </div>
             </div>
@@ -618,12 +618,12 @@ export default function AccountsPage() {
               <div className="flex">
                 <InformationCircleIcon className="h-5 w-5 text-blue-400 mr-3 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-medium text-blue-300 mb-2">What happens next?</h4>
+                  <h4 className="text-sm font-medium text-blue-300 mb-2">Apa yang terjadi selanjutnya?</h4>
                   <ul className="text-xs text-blue-200 space-y-1">
-                    <li>• Account credentials will be verified with BSI</li>
-                    <li>• Initial transaction sync will be performed</li>
-                    <li>• Automatic daily sync will be scheduled</li>
-                    <li>• You can monitor sync status from the accounts page</li>
+                    <li>• Kredensial akun akan diverifikasi dengan BSI</li>
+                    <li>• Sinkronisasi transaksi awal akan dilakukan</li>
+                    <li>• Sinkronisasi harian otomatis akan dijadwalkan</li>
+                    <li>• Anda dapat memantau status sinkronisasi dari halaman akun</li>
                   </ul>
                 </div>
               </div>
@@ -632,7 +632,7 @@ export default function AccountsPage() {
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-4 border-t border-slate-600">
               <div className="text-xs text-slate-400">
-                All credentials are encrypted and stored securely
+                Semua kredensial dienkripsi dan disimpan dengan aman
               </div>
               <div className="flex space-x-3">
                 <Button
@@ -643,7 +643,7 @@ export default function AccountsPage() {
                     resetAccount()
                   }}
                 >
-                  Cancel
+                  Batal
                 </Button>
                 <Button 
                   type="submit" 

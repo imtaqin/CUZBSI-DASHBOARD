@@ -13,7 +13,7 @@ import {
 
 export default function SettingsPage() {
   return (
-    <AdminLayout title="Settings" description="Configure system settings and preferences">
+    <AdminLayout title="Pengaturan" description="Konfigurasi pengaturan sistem dan preferensi">
       <div className="space-y-6">
         {/* Settings Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -21,17 +21,17 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <UserIcon className="h-5 w-5 mr-2 text-blue-600" />
-                Account Settings
+                Pengaturan Akun
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-slate-300 mb-4">
-                Manage your profile, password, and personal preferences.
+                Kelola profil, kata sandi, dan preferensi pribadi Anda.
               </p>
               <div className="space-y-2">
-                <div className="text-sm text-slate-400">• Profile Information</div>
-                <div className="text-sm text-slate-400">• Change Password</div>
-                <div className="text-sm text-slate-400">• Email Preferences</div>
+                <div className="text-sm text-slate-400">• Informasi Profil</div>
+                <div className="text-sm text-slate-400">• Ubah Kata Sandi</div>
+                <div className="text-sm text-slate-400">• Preferensi Email</div>
               </div>
             </CardContent>
           </Card>
@@ -40,17 +40,17 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <ShieldCheckIcon className="h-5 w-5 mr-2 text-green-600" />
-                Security Settings
+                Pengaturan Keamanan
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-slate-300 mb-4">
-                Configure security options and access permissions.
+                Konfigurasi opsi keamanan dan izin akses.
               </p>
               <div className="space-y-2">
-                <div className="text-sm text-slate-400">• Two-Factor Authentication</div>
-                <div className="text-sm text-slate-400">• Session Management</div>
-                <div className="text-sm text-slate-400">• API Access Tokens</div>
+                <div className="text-sm text-slate-400">• Autentikasi Dua Faktor</div>
+                <div className="text-sm text-slate-400">• Manajemen Sesi</div>
+                <div className="text-sm text-slate-400">• Token Akses API</div>
               </div>
             </CardContent>
           </Card>
@@ -59,17 +59,17 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <ServerIcon className="h-5 w-5 mr-2 text-purple-600" />
-                System Settings
+                Pengaturan Sistem
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Configure system-wide settings and integrations.
+                Konfigurasi pengaturan sistem dan integrasi.
               </p>
               <div className="space-y-2">
-                <div className="text-sm text-gray-500">• BSI API Configuration</div>
-                <div className="text-sm text-gray-500">• Sync Schedules</div>
-                <div className="text-sm text-gray-500">• Data Retention</div>
+                <div className="text-sm text-gray-500">• Konfigurasi API BSI</div>
+                <div className="text-sm text-gray-500">• Jadwal Sinkronisasi</div>
+                <div className="text-sm text-gray-500">• Retensi Data</div>
               </div>
             </CardContent>
           </Card>
@@ -78,17 +78,17 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <BellIcon className="h-5 w-5 mr-2 text-orange-600" />
-                Notifications
+                Notifikasi
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Manage notification preferences and alerts.
+                Kelola preferensi notifikasi dan peringatan.
               </p>
               <div className="space-y-2">
-                <div className="text-sm text-gray-500">• Email Notifications</div>
-                <div className="text-sm text-gray-500">• Sync Alerts</div>
-                <div className="text-sm text-gray-500">• Error Notifications</div>
+                <div className="text-sm text-gray-500">• Notifikasi Email</div>
+                <div className="text-sm text-gray-500">• Peringatan Sinkronisasi</div>
+                <div className="text-sm text-gray-500">• Notifikasi Error</div>
               </div>
             </CardContent>
           </Card>
@@ -97,17 +97,17 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <GlobeAltIcon className="h-5 w-5 mr-2 text-indigo-600" />
-                Regional Settings
+                Pengaturan Regional
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Configure language, timezone, and currency settings.
+                Konfigurasi pengaturan bahasa, zona waktu, dan mata uang.
               </p>
               <div className="space-y-2">
-                <div className="text-sm text-gray-500">• Language: English</div>
-                <div className="text-sm text-gray-500">• Timezone: Asia/Jakarta</div>
-                <div className="text-sm text-gray-500">• Currency: IDR</div>
+                <div className="text-sm text-gray-500">• Bahasa: Indonesia</div>
+                <div className="text-sm text-gray-500">• Zona Waktu: Asia/Jakarta</div>
+                <div className="text-sm text-gray-500">• Mata Uang: IDR</div>
               </div>
             </CardContent>
           </Card>
@@ -116,17 +116,17 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <CogIcon className="h-5 w-5 mr-2 text-gray-600" />
-                Advanced Settings
+                Pengaturan Lanjutan
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Advanced configuration options for power users.
+                Opsi konfigurasi lanjutan untuk pengguna mahir.
               </p>
               <div className="space-y-2">
-                <div className="text-sm text-gray-500">• Debug Mode</div>
-                <div className="text-sm text-gray-500">• Export Data</div>
-                <div className="text-sm text-gray-500">• System Logs</div>
+                <div className="text-sm text-gray-500">• Mode Debug</div>
+                <div className="text-sm text-gray-500">• Ekspor Data</div>
+                <div className="text-sm text-gray-500">• Log Sistem</div>
               </div>
             </CardContent>
           </Card>
@@ -135,32 +135,32 @@ export default function SettingsPage() {
         {/* System Information */}
         <Card>
           <CardHeader>
-            <CardTitle>System Information</CardTitle>
+            <CardTitle>Informasi Sistem</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Application</h4>
+                <h4 className="font-medium text-gray-900 mb-2">Aplikasi</h4>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <div>Version: 1.0.0</div>
+                  <div>Versi: 1.0.0</div>
                   <div>Build: 2025.01.001</div>
-                  <div>Environment: Development</div>
+                  <div>Lingkungan: Development</div>
                 </div>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Server Status</h4>
+                <h4 className="font-medium text-gray-900 mb-2">Status Server</h4>
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="flex items-center">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    Database: Connected
+                    Database: Terhubung
                   </div>
                   <div className="flex items-center">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    Socket.IO: Connected
+                    Socket.IO: Terhubung
                   </div>
                   <div className="flex items-center">
                     <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
-                    BSI API: Testing Required
+                    BSI API: Perlu Pengujian
                   </div>
                 </div>
               </div>

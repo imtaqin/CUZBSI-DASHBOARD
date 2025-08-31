@@ -40,14 +40,14 @@ export default function ProfilePage() {
   if (!user) return null
 
   return (
-    <AdminLayout title="Profile" description="Manage your account profile and settings">
+    <AdminLayout title="Profil" description="Kelola profil akun dan pengaturan Anda">
       <div className="space-y-6">
         {/* Profile Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <UserIcon className="h-5 w-5 mr-2" />
-              Profile Information
+              Informasi Profil
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -76,7 +76,7 @@ export default function ProfilePage() {
                 onClick={() => setIsEditing(!isEditing)}
                 variant={isEditing ? "outline" : "default"}
               >
-                {isEditing ? 'Cancel' : 'Edit Profile'}
+                {isEditing ? 'Batal' : 'Edit Profil'}
               </Button>
             </div>
           </CardContent>
@@ -86,63 +86,63 @@ export default function ProfilePage() {
           {/* Personal Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
+              <CardTitle>Informasi Pribadi</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {isEditing ? (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <Input
-                      label="First Name"
+                      label="Nama Depan"
                       value={formData.firstName}
                       onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                     />
                     <Input
-                      label="Last Name"
+                      label="Nama Belakang"
                       value={formData.lastName}
                       onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                     />
                   </div>
                   <Input
-                    label="Email Address"
+                    label="Alamat Email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                   />
                   <div className="flex space-x-3 pt-4">
-                    <Button onClick={handleSave}>Save Changes</Button>
-                    <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                    <Button onClick={handleSave}>Simpan Perubahan</Button>
+                    <Button variant="outline" onClick={handleCancel}>Batal</Button>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">First Name</label>
+                      <label className="text-sm font-medium text-gray-500">Nama Depan</label>
                       <div className="mt-1 text-sm text-gray-900">{user.firstName}</div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Last Name</label>
+                      <label className="text-sm font-medium text-gray-500">Nama Belakang</label>
                       <div className="mt-1 text-sm text-gray-900">{user.lastName}</div>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Email Address</label>
+                    <label className="text-sm font-medium text-gray-500">Alamat Email</label>
                     <div className="mt-1 text-sm text-gray-900 flex items-center">
                       <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
                       {user.email}
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Account Status</label>
+                    <label className="text-sm font-medium text-gray-500">Status Akun</label>
                     <div className="mt-1">
                       <Badge variant={user.isActive ? "success" : "destructive"}>
-                        {user.isActive ? "Active" : "Inactive"}
+                        {user.isActive ? "Aktif" : "Tidak Aktif"}
                       </Badge>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Member Since</label>
+                    <label className="text-sm font-medium text-gray-500">Anggota Sejak</label>
                     <div className="mt-1 text-sm text-gray-900 flex items-center">
                       <CalendarDaysIcon className="h-4 w-4 mr-2 text-gray-400" />
                       {formatDate(user.createdAt)}
@@ -158,23 +158,23 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <ShieldCheckIcon className="h-5 w-5 mr-2" />
-                Security Settings
+                Pengaturan Keamanan
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-500">Password</label>
+                <label className="text-sm font-medium text-gray-500">Kata Sandi</label>
                 <div className="mt-1 flex items-center justify-between">
                   <span className="text-sm text-gray-400">••••••••••••</span>
                   <Button variant="outline" size="sm">
                     <KeyIcon className="h-4 w-4 mr-2" />
-                    Change Password
+                    Ubah Kata Sandi
                   </Button>
                 </div>
               </div>
               
               <div className="border-t pt-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Roles & Permissions</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Peran & Izin</h4>
                 <div className="space-y-3">
                   {user.Roles.map((role) => (
                     <div key={role.id} className="border border-gray-200 rounded-md p-3">
@@ -187,7 +187,7 @@ export default function ProfilePage() {
                       </div>
                       {role.Permissions && role.Permissions.length > 0 && (
                         <div className="mt-2">
-                          <div className="text-xs text-gray-500 mb-1">Permissions:</div>
+                          <div className="text-xs text-gray-500 mb-1">Izin:</div>
                           <div className="flex flex-wrap gap-1">
                             {role.Permissions.slice(0, 3).map((permission) => (
                               <Badge key={permission.id} variant="outline" className="text-xs">
@@ -196,7 +196,7 @@ export default function ProfilePage() {
                             ))}
                             {role.Permissions.length > 3 && (
                               <Badge variant="outline" className="text-xs">
-                                +{role.Permissions.length - 3} more
+                                +{role.Permissions.length - 3} lainnya
                               </Badge>
                             )}
                           </div>

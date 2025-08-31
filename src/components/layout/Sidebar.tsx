@@ -17,7 +17,8 @@ import {
   UserIcon,
   Bars3Icon,
   XMarkIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  ShieldExclamationIcon
 } from '@heroicons/react/24/outline'
 
 interface SidebarItem {
@@ -30,39 +31,40 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
   {
-    name: 'Dashboard',
+    name: 'Dasbor',
     href: '/admin',
     icon: HomeIcon,
   },
   {
-    name: 'User Management',
+    name: 'Manajemen Pengguna',
     href: '/admin/users',
     icon: UsersIcon,
     permission: 'users.manage'
   },
   {
-    name: 'Role Management',
+    name: 'Manajemen Peran',
     href: '/admin/roles',
     icon: ShieldCheckIcon,
     permission: 'users.manage'
   },
   {
-    name: 'Accounts',
+    name: 'Izin Akses',
+    href: '/admin/permissions',
+    icon: ShieldExclamationIcon,
+    permission: 'users.manage'
+  },
+  {
+    name: 'Akun',
     href: '/admin/accounts',
     icon: BuildingLibraryIcon,
   },
   {
-    name: 'Transactions',
+    name: 'Transaksi',
     href: '/admin/transactions',
     icon: CreditCardIcon,
   },
   {
-    name: 'Real-time Logs',
-    href: '/admin/logs',
-    icon: DocumentTextIcon,
-  },
-  {
-    name: 'Settings',
+    name: 'Pengaturan',
     href: '/admin/settings',
     icon: CogIcon,
   },
@@ -99,12 +101,12 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+      <div className="lg:hidden fixed top-3 left-3 z-50">
         <button
           onClick={() => setIsMobileOpen(true)}
-          className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+          className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 shadow-lg bg-slate-800/90 backdrop-blur-sm"
         >
-          <Bars3Icon className="h-6 w-6" />
+          <Bars3Icon className="h-5 w-5" />
         </button>
       </div>
 
@@ -160,12 +162,12 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
   return (
     <div className="flex flex-col h-full bg-slate-900 border-r border-slate-700 shadow-sm">
       {/* Logo/Brand */}
-      <div className="flex items-center justify-center h-16 px-4 border-b border-slate-700">
-        <h1 className="text-xl font-bold text-white">CUZBSI Admin</h1>
+      <div className="flex items-center justify-center h-14 px-3 border-b border-slate-700">
+        <h1 className="text-lg font-bold text-white">CUZBSI Admin</h1>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {filteredItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
           
@@ -175,21 +177,21 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
               href={item.href}
               onClick={onItemClick}
               className={cn(
-                "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200",
+                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200",
                 isActive
-                  ? "bg-blue-600 text-white"
+                  ? "bg-blue-600 text-white shadow-sm"
                   : "text-slate-300 hover:bg-slate-800 hover:text-white"
               )}
             >
               <item.icon
                 className={cn(
-                  "mr-3 h-5 w-5 transition-colors duration-200",
+                  "mr-3 h-5 w-5 transition-colors duration-200 flex-shrink-0",
                   isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
                 )}
               />
-              <span>{item.name}</span>
+              <span className="truncate">{item.name}</span>
               {item.badge && (
-                <span className="ml-auto inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                <span className="ml-auto inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-red-100 text-red-800 flex-shrink-0">
                   {item.badge}
                 </span>
               )}
@@ -200,8 +202,8 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
 
       {/* User section */}
       <div className="flex-shrink-0 border-t border-slate-700">
-        <div className="px-4 py-3">
-          <div className="flex items-center">
+        <div className="px-3 py-3">
+          <div className="flex items-center mb-3">
             <div className="flex-shrink-0">
               <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <UserIcon className="h-4 w-4 text-white" />
@@ -217,20 +219,20 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
             </div>
           </div>
           
-          <div className="mt-3 flex items-center space-x-2">
+          <div className="flex items-center space-x-2">
             <Link
               href="/admin/profile"
               onClick={onItemClick}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2 px-3 rounded-md transition-colors duration-200 text-center"
+              className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2 px-2 rounded-md transition-colors duration-200 text-center"
             >
-              Profile
+              Profil
             </Link>
             <button
               onClick={onLogout}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 px-3 rounded-md transition-colors duration-200 flex items-center justify-center"
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 px-2 rounded-md transition-colors duration-200 flex items-center justify-center"
             >
-              <ArrowLeftEndOnRectangleIcon className="h-4 w-4 mr-1" />
-              Logout
+              <ArrowLeftEndOnRectangleIcon className="h-3 w-3 mr-1" />
+              Keluar
             </button>
           </div>
         </div>
