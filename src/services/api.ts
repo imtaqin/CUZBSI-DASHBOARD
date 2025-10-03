@@ -177,6 +177,80 @@ class ApiService {
     return response.data
   }
 
+  async createAccount(accountData: {
+    accountNumber: string
+    companyId: string
+    username: string
+    password: string
+    bankId: number
+    autoSync: boolean
+    isActive: boolean
+  }): Promise<ApiResponse<{ account: Account }>> {
+    const response = await this.api.post<ApiResponse<{ account: Account }>>('/api/accounts', accountData)
+    return response.data
+  }
+
+  async updateAccount(id: number, accountData: {
+    accountNumber?: string
+    companyId?: string
+    username?: string
+    password?: string
+    bankId?: number
+    autoSync?: boolean
+    isActive?: boolean
+  }): Promise<ApiResponse<{ account: Account }>> {
+    const response = await this.api.put<ApiResponse<{ account: Account }>>(`/api/accounts/${id}`, accountData)
+    return response.data
+  }
+
+  async deleteAccount(id: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete<ApiResponse<null>>(`/api/accounts/${id}`)
+    return response.data
+  }
+
+  async createBank(bankData: {
+    code: string
+    name: string
+    fullName: string
+    country?: string
+    currency?: string
+    logoUrl?: string
+    websiteUrl?: string
+    supportedFeatures?: {
+      scraping?: boolean
+      realtime?: boolean
+      api?: boolean
+    }
+    configuration?: Record<string, any>
+  }): Promise<ApiResponse<{ bank: Bank }>> {
+    const response = await this.api.post<ApiResponse<{ bank: Bank }>>('/api/banks', bankData)
+    return response.data
+  }
+
+  async updateBank(id: number, bankData: {
+    code?: string
+    name?: string
+    fullName?: string
+    country?: string
+    currency?: string
+    logoUrl?: string
+    websiteUrl?: string
+    supportedFeatures?: {
+      scraping?: boolean
+      realtime?: boolean
+      api?: boolean
+    }
+    configuration?: Record<string, any>
+  }): Promise<ApiResponse<{ bank: Bank }>> {
+    const response = await this.api.put<ApiResponse<{ bank: Bank }>>(`/api/banks/${id}`, bankData)
+    return response.data
+  }
+
+  async deleteBank(id: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete<ApiResponse<null>>(`/api/banks/${id}`)
+    return response.data
+  }
+
   async getBanks(): Promise<ApiResponse<{ banks: Bank[] }>> {
     const response = await this.api.get<ApiResponse<{ banks: Bank[] }>>('/api/banks')
     return response.data
@@ -218,6 +292,34 @@ class ApiService {
     notes?: string
   }): Promise<ApiResponse<null>> {
     const response = await this.api.put(`/transactions/${id}/flag`, data)
+    return response.data
+  }
+
+  async getFlagMappings(): Promise<ApiResponse<{ flagMappings: any[] }>> {
+    const response = await this.api.get<ApiResponse<{ flagMappings: any[] }>>('/api/transactions/flags')
+    return response.data
+  }
+
+  async createFlagMapping(data: {
+    accountNumber: string
+    flag: string
+    keywords: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.post('/api/transactions/flags', data)
+    return response.data
+  }
+
+  async updateFlagMapping(id: number, data: {
+    accountNumber?: string
+    flag?: string
+    keywords?: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put(`/api/transactions/flags/${id}`, data)
+    return response.data
+  }
+
+  async deleteFlagMapping(id: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete(`/api/transactions/flags/${id}`)
     return response.data
   }
 

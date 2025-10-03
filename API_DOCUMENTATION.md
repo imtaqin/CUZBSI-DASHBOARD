@@ -154,6 +154,28 @@ socket.on('batch_sync_completed', (data) => {
 });
 ```
 
+#### Screenshot Preview Events
+```javascript
+// Screenshot preview (sent every 0.5 seconds during automation)
+socket.on('automation_preview', (data) => {
+  console.log('Screenshot captured:', data);
+  
+  // Display image in browser
+  const img = document.createElement('img');
+  img.src = data.image; // Base64 data URL
+  document.body.appendChild(img);
+  
+  // data: { syncId, timestamp, image, message }
+  // image format: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+});
+
+// Screenshot preview stopped
+socket.on('automation_preview_stopped', (data) => {
+  console.log('Preview stopped:', data);
+  // data: { syncId, timestamp, message }
+});
+```
+
 ### Event Examples
 
 **Sync Progress Event:**
@@ -177,6 +199,25 @@ socket.on('batch_sync_completed', (data) => {
     "total": 5,
     "percentage": 40
   }
+}
+```
+
+**Screenshot Preview Event:**
+```json
+{
+  "syncId": "sync_4_1724752156",
+  "timestamp": "2025-08-27T09:04:01.536Z",
+  "message": "Screenshot captured",
+  "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABYAAAAOACAYAAAA..."
+}
+```
+
+**Preview Stopped Event:**
+```json
+{
+  "syncId": "sync_4_1724752156",
+  "timestamp": "2025-08-27T09:04:01.536Z",
+  "message": "Screenshot preview stopped"
 }
 ```
 
@@ -870,6 +911,12 @@ Returns all transactions that have been flagged.
 **Query Parameters:**
 - `startDate` (optional): Start date in DD/MM/YYYY format
 - `endDate` (optional): End date in DD/MM/YYYY format
+- `enablePreview` (optional): Enable screenshot preview (true/false)
+
+**Example Request:**
+```
+POST /api/bsi/accounts/4/sync?startDate=01/08/2025&endDate=27/08/2025&enablePreview=true
+```
 
 **Response:**
 ```json
@@ -881,9 +928,10 @@ Returns all transactions that have been flagged.
     "accountId": 4,
     "socketRoom": "sync_sync_4_1724752156",
     "dateRange": {
-      "startDate": null,
-      "endDate": null
-    }
+      "startDate": "01/08/2025",
+      "endDate": "27/08/2025"
+    },
+    "previewEnabled": true
   }
 }
 ```
@@ -894,6 +942,12 @@ Returns all transactions that have been flagged.
 **Query Parameters:**
 - `startDate` (optional): Start date in DD/MM/YYYY format
 - `endDate` (optional): End date in DD/MM/YYYY format
+- `enablePreview` (optional): Enable screenshot preview (true/false)
+
+**Example Request:**
+```
+POST /api/bsi/accounts/sync-all?startDate=01/08/2025&endDate=27/08/2025&enablePreview=true
+```
 
 **Response:**
 ```json
@@ -906,9 +960,10 @@ Returns all transactions that have been flagged.
     "accountCount": 3,
     "accountIds": [1, 2, 3],
     "dateRange": {
-      "startDate": null,
-      "endDate": null
-    }
+      "startDate": "01/08/2025",
+      "endDate": "27/08/2025"
+    },
+    "previewEnabled": true
   }
 }
 ```

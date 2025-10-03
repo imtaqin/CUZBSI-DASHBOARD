@@ -360,27 +360,29 @@ export default function TransactionsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Akun</label>
                 <Select
+                  options={[
+                    { value: '', label: 'Semua Akun' },
+                    ...accounts.map(account => ({
+                      value: account.id.toString(),
+                      label: account.accountName || account.accountNumber
+                    }))
+                  ]}
                   value={filters.accountId?.toString() || ''}
-                  onValueChange={(value) => handleFilterChange('accountId', value ? parseInt(value) : undefined)}
-                >
-                  <option value="">Semua Akun</option>
-                  {accounts.map(account => (
-                    <option key={account.id} value={account.id}>{account.name}</option>
-                  ))}
-                </Select>
+                  onChange={(value) => handleFilterChange('accountId', value ? parseInt(value as string) : undefined)}
+                />
               </div>
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tipe</label>
                 <Select
+                  options={[
+                    { value: '', label: 'Semua Tipe' },
+                    { value: 'Kredit', label: 'Pemasukan' },
+                    { value: 'Debit', label: 'Pengeluaran' }
+                  ]}
                   value={filters.type || ''}
-                  onValueChange={(value) => handleFilterChange('type', value || undefined)}
-                >
-                  <option value="">Semua Tipe</option>
-                  <option value="income">Pemasukan</option>
-                  <option value="expense">Pengeluaran</option>
-                  <option value="transfer">Transfer</option>
-                </Select>
+                  onChange={(value) => handleFilterChange('type', value || undefined)}
+                />
               </div>
               
               <div className="space-y-2">

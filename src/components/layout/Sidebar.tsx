@@ -18,7 +18,8 @@ import {
   Bars3Icon,
   XMarkIcon,
   ShieldCheckIcon,
-  ShieldExclamationIcon
+  ShieldExclamationIcon,
+  FlagIcon
 } from '@heroicons/react/24/outline'
 
 interface SidebarItem {
@@ -62,6 +63,11 @@ const sidebarItems: SidebarItem[] = [
     name: 'Transaksi',
     href: '/admin/transactions',
     icon: CreditCardIcon,
+  },
+  {
+    name: 'Manajemen Flag',
+    href: '/admin/flags',
+    icon: FlagIcon,
   },
   {
     name: 'Pengaturan',

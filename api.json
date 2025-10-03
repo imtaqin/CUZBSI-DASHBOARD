@@ -267,33 +267,96 @@
         }
       }
     },
-    "GET /api/accounts": {
-      "description": "Get user's bank accounts",
-      "response": {
-        "success": true,
-        "message": "Accounts retrieved successfully",
-        "data": {
-          "accounts": [
-            {
-              "id": 4,
-              "accountNumber": "61862171",
-              "companyId": "0338",
-              "isActive": true,
-              "lastBalance": "1250000.00",
-              "Bank": {
-                "name": "BSI",
-                "fullName": "Bank Syariah Indonesia"
-              },
-              "ScrapingOption": {
-                "isActive": true,
-                "cronExpression": "0 */6 * * *",
-                "lastStatus": "success"
-              }
-            }
-          ]
-        }
-      }
-    },
+     "GET /api/accounts": {
+       "description": "Get user's bank accounts",
+       "response": {
+         "success": true,
+         "message": "Accounts retrieved successfully",
+         "data": {
+           "accounts": [
+             {
+               "id": 4,
+               "accountNumber": "61862171",
+               "companyId": "0338",
+               "isActive": true,
+               "lastBalance": "1250000.00",
+               "Bank": {
+                 "name": "BSI",
+                 "fullName": "Bank Syariah Indonesia"
+               },
+               "ScrapingOption": {
+                 "isActive": true,
+                 "cronExpression": "0 */6 * * *",
+                 "lastStatus": "success"
+               }
+             }
+           ]
+         }
+       }
+     },
+     "POST /api/accounts": {
+       "description": "Create new bank account (admin only)",
+       "permissions": ["accounts.manage"],
+       "body": {
+         "accountNumber": "1234567890123456",
+         "companyId": "0338",
+         "username": "bsi_username",
+         "password": "secure_password",
+         "bankId": 1,
+         "autoSync": true,
+         "isActive": true
+       },
+       "response": {
+         "success": true,
+         "message": "Account created successfully",
+         "data": {
+           "account": {
+             "id": 5,
+             "accountNumber": "1234567890123456",
+             "companyId": "0338",
+             "username": "bsi_username",
+             "isActive": true,
+             "Bank": {
+               "name": "BSI",
+               "fullName": "Bank Syariah Indonesia"
+             }
+           }
+         }
+       }
+     },
+     "PUT /api/accounts/:id": {
+       "description": "Update bank account (admin only)",
+       "permissions": ["accounts.manage"],
+       "body": {
+         "accountNumber": "1234567890123456",
+         "companyId": "0338",
+         "username": "bsi_username",
+         "bankId": 1,
+         "autoSync": true,
+         "isActive": true
+       },
+       "response": {
+         "success": true,
+         "message": "Account updated successfully",
+         "data": {
+           "account": {
+             "id": 5,
+             "accountNumber": "1234567890123456",
+             "companyId": "0338",
+             "username": "bsi_username",
+             "isActive": true
+           }
+         }
+       }
+     },
+     "DELETE /api/accounts/:id": {
+       "description": "Delete bank account (admin only)",
+       "permissions": ["accounts.manage"],
+       "response": {
+         "success": true,
+         "message": "Account deleted successfully"
+       }
+     },
     "GET /api/transactions": {
       "description": "Get transactions with filtering",
       "params": {
@@ -430,15 +493,161 @@
       "response": {
         "success": true,
         "message": "Scraping options updated successfully",
-        "data": {
-          "id": 1,
-          "accountId": 4,
-          "isActive": true,
-          "cronExpression": "0 */4 * * *"
-        }
-      }
-    }
-  },
+         "data": {
+           "id": 1,
+           "accountId": 4,
+           "isActive": true,
+           "cronExpression": "0 */4 * * *"
+         }
+       }
+     },
+     "GET /api/banks": {
+       "description": "Get all active banks",
+       "response": {
+         "success": true,
+         "message": "Banks retrieved successfully",
+         "data": {
+           "banks": [
+             {
+               "id": 1,
+               "code": "BSI",
+               "name": "BSI",
+               "fullName": "Bank Syariah Indonesia",
+               "country": "ID",
+               "currency": "IDR",
+               "logoUrl": "/images/banks/bsi.png",
+               "websiteUrl": "https://www.bsi.co.id",
+               "supportedFeatures": {
+                 "scraping": true,
+                 "realtime": false,
+                 "api": false
+               },
+               "configuration": {
+                 "loginUrl": "https://bsinet.bsi.co.id",
+                 "timeout": 30000
+               },
+               "isActive": true,
+               "createdAt": "2024-01-01T00:00:00.000Z",
+               "updatedAt": "2024-01-01T00:00:00.000Z"
+             }
+           ]
+         }
+       }
+     },
+     "POST /api/banks": {
+       "description": "Create new bank (admin only)",
+       "permissions": ["banks.manage"],
+       "body": {
+         "code": "BCA",
+         "name": "BCA",
+         "fullName": "Bank Central Asia",
+         "country": "ID",
+         "currency": "IDR",
+         "logoUrl": "/images/banks/bca.png",
+         "websiteUrl": "https://www.bca.co.id",
+         "supportedFeatures": {
+           "scraping": true,
+           "realtime": false,
+           "api": false
+         },
+         "configuration": {
+           "loginUrl": "https://ib.bca.co.id",
+           "timeout": 30000
+         }
+       },
+       "response": {
+         "success": true,
+         "message": "Bank created successfully",
+         "data": {
+           "bank": {
+             "id": 2,
+             "code": "BCA",
+             "name": "BCA",
+             "fullName": "Bank Central Asia",
+             "country": "ID",
+             "currency": "IDR",
+             "logoUrl": "/images/banks/bca.png",
+             "websiteUrl": "https://www.bca.co.id",
+             "supportedFeatures": {
+               "scraping": true,
+               "realtime": false,
+               "api": false
+             },
+             "configuration": {
+               "loginUrl": "https://ib.bca.co.id",
+               "timeout": 30000
+             },
+             "isActive": true
+           }
+         }
+       }
+     },
+     "PUT /api/banks/:id": {
+       "description": "Update bank (admin only)",
+       "permissions": ["banks.manage"],
+       "body": {
+         "code": "BCA_UPDATED",
+         "name": "BCA Updated",
+         "fullName": "Bank Central Asia Updated",
+         "supportedFeatures": {
+           "scraping": true,
+           "realtime": true,
+           "api": false
+         }
+       },
+       "response": {
+         "success": true,
+         "message": "Bank updated successfully",
+         "data": {
+           "bank": {
+             "id": 2,
+             "code": "BCA_UPDATED",
+             "name": "BCA Updated",
+             "fullName": "Bank Central Asia Updated",
+             "supportedFeatures": {
+               "scraping": true,
+               "realtime": true,
+               "api": false
+             }
+           }
+         }
+       }
+     },
+     "DELETE /api/banks/:id": {
+       "description": "Delete bank (admin only)",
+       "permissions": ["banks.manage"],
+       "response": {
+         "success": true,
+         "message": "Bank deleted successfully"
+       }
+     },
+     "GET /api/banks/all": {
+       "description": "Get all banks including inactive ones (admin only)",
+       "permissions": ["banks.manage"],
+       "response": {
+         "success": true,
+         "message": "All banks retrieved successfully",
+         "data": {
+           "banks": [
+             {
+               "id": 1,
+               "code": "BSI",
+               "name": "BSI",
+               "fullName": "Bank Syariah Indonesia",
+               "isActive": true
+             },
+             {
+               "id": 2,
+               "code": "BCA",
+               "name": "BCA",
+               "fullName": "Bank Central Asia",
+               "isActive": false
+             }
+           ]
+         }
+       }
+     }
+   },
   "socketExamples": {
     "sync_started": {
       "syncId": "sync_4_1724752156",

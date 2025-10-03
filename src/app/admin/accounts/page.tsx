@@ -64,6 +64,7 @@ export default function AccountsPage() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [selectedAccountForCron, setSelectedAccountForCron] = useState<Account | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSyncSubmitting, setIsSyncSubmitting] = useState(false)
 
   const { register: registerAccount, handleSubmit: handleAccountSubmit, reset: resetAccount, watch: watchAccount, setValue: setValueAccount, formState: { errors: accountErrors } } = useForm<AccountFormData>()
@@ -132,21 +133,21 @@ export default function AccountsPage() {
   const onSubmitAccount = async (data: AccountFormData) => {
     try {
       setIsSubmitting(true)
-      
+      setSubmitError(null)
+
       // Validate bankId
-      if (!data.bankId) {
-        console.error('Please select a bank')
+      if (!data.bankId || data.bankId <= 0) {
+        setSubmitError('Silakan pilih bank')
         return
       }
-      
-      // Note: This would need to be implemented in the API service
-      console.log('Creating account:', data)
-      // await apiService.createAccount(data)
+
+      await apiService.createAccount(data)
       setIsAccountModalOpen(false)
       fetchAccounts()
       resetAccount()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save account:', error)
+      setSubmitError(error.response?.data?.message || 'Gagal membuat akun. Silakan coba lagi.')
     } finally {
       setIsSubmitting(false)
     }
@@ -485,12 +486,13 @@ export default function AccountsPage() {
           onClose={() => {
             setIsAccountModalOpen(false)
             resetAccount()
+            setSubmitError(null)
           }}
           title="Tambah Akun BSI Baru"
           size="lg"
         >
           <form onSubmit={handleAccountSubmit(onSubmitAccount)} className="space-y-6">
-            {/* Header Info */}
+             {/* Header Info */}
             <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
               <div className="flex items-center">
                 <BuildingLibraryIcon className="h-8 w-8 text-blue-500 mr-3" />
@@ -502,6 +504,19 @@ export default function AccountsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Error Display */}
+            {submitError && (
+              <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-4">
+                <div className="flex">
+                  <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-red-300">Error</p>
+                    <p className="text-sm text-red-200 mt-1">{submitError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Bank Selection */}
@@ -515,7 +530,7 @@ export default function AccountsPage() {
                   }))}
                   label="Institusi Bank"
                   value={watchAccount('bankId')?.toString() || ''}
-                  onChange={(value) => setValueAccount('bankId', parseInt(value as string))}
+                  onChange={(value) => setValueAccount('bankId', parseInt(value as string) || 0)}
                   error={accountErrors.bankId?.message}
                 />
 
@@ -650,8 +665,8 @@ export default function AccountsPage() {
                   loading={isSubmitting}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Add Account
+                   <PlusIcon className="h-4 w-4 mr-2" />
+                   Tambah Akun
                 </Button>
               </div>
             </div>
