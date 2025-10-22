@@ -14,7 +14,7 @@ import type {
 
 class ApiService {
   private api: AxiosInstance
-  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5543'
+  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://cuzbsibackend.imtaqin.id'
 
   constructor() {
     this.api = axios.create({

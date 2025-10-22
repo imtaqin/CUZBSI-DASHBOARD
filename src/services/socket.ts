@@ -28,7 +28,7 @@ interface SocketEvents {
 
 class SocketService {
   private socket: Socket | null = null
-  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5543'
+  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://cuzbsibackend.imtaqin.id'
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private handlers: SocketEventHandlers = {}
