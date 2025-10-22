@@ -84,6 +84,25 @@ export interface DashboardStats {
   newFlags: number
 }
 
+export interface FlagStat {
+  flagId: string
+  name: string
+  color: string
+  icon: string
+  count: number
+  totalAmount: number
+}
+
+export interface WhatsappLog {
+  id: number
+  phoneNumber: string
+  message: string
+  status: string
+  sentAt: string
+  deliveredAt?: string
+  errorMessage?: string
+}
+
 export interface ChartData {
   transactionDates: string[]
   transactionCounts: number[]
@@ -93,6 +112,8 @@ export interface ChartData {
 
 export interface DashboardData {
   stats: DashboardStats
+  flagStats: FlagStat[]
+  whatsappLogs: WhatsappLog[]
   accounts: Account[]
   recentTransactions: Transaction[]
   chartData: ChartData

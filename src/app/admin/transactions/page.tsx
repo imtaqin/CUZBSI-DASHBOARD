@@ -17,7 +17,8 @@ import {
   ArrowsUpDownIcon,
   CheckCircleIcon,
   EyeIcon,
-  PhoneIcon
+  PhoneIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline'
 
 interface TransactionFilters {
@@ -187,47 +188,47 @@ export default function TransactionsPage() {
 
   return (
     <AdminLayout title="Transaksi" description="Kelola transaksi bank">
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Header with Statistics */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 sm:p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <BanknotesIcon className="h-5 w-5 text-green-600" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BanknotesIcon className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Transaksi</h2>
-                <p className="text-xs text-slate-500">Kelola dan pantau transaksi bank</p>
+                <h2 className="text-base sm:text-lg font-semibold text-slate-900">Transaksi</h2>
+                <p className="text-xs text-slate-500 hidden sm:block">Kelola dan pantau transaksi bank</p>
               </div>
             </div>
           </div>
 
           {/* Statistics Grid */}
-          <div className="grid grid-cols-4 gap-4 pt-3 border-t border-slate-100">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 pt-3 border-t border-slate-100">
             <div className="text-center">
-              <div className="text-xs text-slate-500 mb-1">Total Transaksi</div>
-              <div className="text-lg font-semibold text-slate-900">{pagination.totalItems}</div>
+              <div className="text-xs text-slate-500 mb-1">Total</div>
+              <div className="text-sm sm:text-lg font-semibold text-slate-900">{pagination.totalItems}</div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-slate-500 mb-1">Total Pemasukan</div>
-              <div className="text-lg font-semibold text-emerald-600">{formatCurrency(totalKredit)}</div>
+              <div className="text-xs text-slate-500 mb-1">Pemasukan</div>
+              <div className="text-sm sm:text-lg font-semibold text-emerald-600 truncate">{formatCurrency(totalKredit)}</div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-slate-500 mb-1">Total Pengeluaran</div>
-              <div className="text-lg font-semibold text-red-600">{formatCurrency(totalDebit)}</div>
+              <div className="text-xs text-slate-500 mb-1">Pengeluaran</div>
+              <div className="text-sm sm:text-lg font-semibold text-red-600 truncate">{formatCurrency(totalDebit)}</div>
             </div>
             <div className="text-center">
               <div className="text-xs text-slate-500 mb-1">Diproses</div>
-              <div className="text-lg font-semibold text-blue-600">{processedCount}/{transactions.length}</div>
+              <div className="text-sm sm:text-lg font-semibold text-blue-600">{processedCount}/{transactions.length}</div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white px-4 py-3 rounded-lg border border-slate-200">
+        <div className="bg-white px-3 sm:px-4 py-3 rounded-lg border border-slate-200">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <FunnelIcon className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-700">
+              <FunnelIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Filter
               {activeFiltersCount > 0 && (
                 <Badge variant="secondary" className="text-xs">{activeFiltersCount}</Badge>
@@ -244,7 +245,7 @@ export default function TransactionsPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
             <div className="relative">
               <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
@@ -289,15 +290,81 @@ export default function TransactionsPage() {
 
         {/* Transactions Table */}
         <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            {transactions.length === 0 ? (
-              <div className="text-center py-12 text-slate-400">
-                <BanknotesIcon className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                <p className="text-sm font-medium">Tidak ada transaksi</p>
-                <p className="text-xs mt-1">Transaksi akan muncul di sini</p>
+          {transactions.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              <BanknotesIcon className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+              <p className="text-sm font-medium">Tidak ada transaksi</p>
+              <p className="text-xs mt-1">Transaksi akan muncul di sini</p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile Card View */}
+              <div className="sm:hidden divide-y divide-slate-100">
+                {transactions.map((transaction) => (
+                  <div key={transaction.id} className="p-4 hover:bg-slate-50">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-slate-900 mb-1">{transaction.description}</div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <span>{new Date(transaction.tanggal).toLocaleDateString('id-ID')}</span>
+                          <span>•</span>
+                          <span>{new Date(transaction.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full flex-shrink-0 ml-2 ${
+                        transaction.type === 'Kredit' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {transaction.type}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 mb-3">
+                      {transaction.senderName && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <UserIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                          <span className="text-slate-700">{transaction.senderName}</span>
+                          {transaction.senderPhone && (
+                            <span className="text-slate-500">({transaction.senderPhone})</span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <CreditCardIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                        <span className="text-slate-700">{transaction.Account?.accountNumber}</span>
+                        <span className="text-slate-500">- {transaction.Account?.Bank?.name}</span>
+                      </div>
+
+                      {transaction.flag && (
+                        <div className="flex items-center gap-2">
+                          <FlagIcon className="h-3.5 w-3.5 text-purple-600 flex-shrink-0" />
+                          <span className="text-xs text-purple-700 font-medium">
+                            {flags.find(f => f.id === transaction.flag)?.name || transaction.flag}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                      <div className={`font-mono text-base font-semibold ${
+                        transaction.type === 'Kredit' ? 'text-emerald-600' : 'text-red-600'
+                      }`}>
+                        {transaction.type === 'Debit' ? '-' : '+'}{formatCurrency(parseFloat(transaction.Amount))}
+                      </div>
+                      <button
+                        onClick={() => handleFlagTransaction(transaction)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+                      >
+                        <FlagIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <table className="w-full">
+
+              {/* Desktop Table View */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th
@@ -413,8 +480,9 @@ export default function TransactionsPage() {
                   ))}
                 </tbody>
               </table>
-            )}
-          </div>
+              </div>
+            </>
+          )}
 
           {/* Pagination */}
           {transactions.length > 0 && (

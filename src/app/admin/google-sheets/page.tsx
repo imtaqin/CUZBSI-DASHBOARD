@@ -306,11 +306,11 @@ export default function GoogleSheetsPage() {
       title="Integrasi Google Sheets"
       description="Konfigurasi ekspor otomatis transaksi ke Google Sheets"
     >
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header Actions */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+            <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <DocumentTextIcon className="h-6 w-6 text-green-600" />
             </div>
             <div>
@@ -321,14 +321,15 @@ export default function GoogleSheetsPage() {
           <div className="flex gap-2">
             <Button
               onClick={() => setShowTutorialModal(true)}
-              className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+              className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex-1 sm:flex-initial"
             >
               <QuestionMarkCircleIcon className="h-4 w-4" />
-              Tutorial
+              <span className="hidden sm:inline">Tutorial</span>
             </Button>
-            <Button onClick={() => handleOpenModal()} className="btn-primary">
+            <Button onClick={() => handleOpenModal()} className="btn-primary flex-1 sm:flex-initial">
               <PlusIcon className="h-4 w-4" />
-              Tambah Konfigurasi
+              <span className="hidden sm:inline">Tambah Konfigurasi</span>
+              <span className="sm:hidden">Tambah</span>
             </Button>
           </div>
         </div>
@@ -344,12 +345,12 @@ export default function GoogleSheetsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {configs.map((config) => (
             <div key={config.id} className="bg-white rounded-lg shadow-sm border border-slate-200">
-              <div className="p-4">
+              <div className="p-4 sm:p-5">
                 {/* Header */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900">{config.name}</h3>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 break-words">{config.name}</h3>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
                       Sheet: {config.sheetName}
                     </p>
                   </div>
@@ -369,63 +370,63 @@ export default function GoogleSheetsPage() {
 
                 {/* Info */}
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-slate-600">
-                    <DocumentTextIcon className="h-4 w-4 mr-2 text-slate-400" />
-                    <span className="truncate">{config.spreadsheetId}</span>
+                  <div className="flex items-start sm:items-center text-xs sm:text-sm text-slate-600">
+                    <DocumentTextIcon className="h-4 w-4 mr-2 text-slate-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+                    <span className="truncate break-all">{config.spreadsheetId}</span>
                   </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <ClockIcon className="h-4 w-4 mr-2 text-slate-400" />
-                    Sinkronisasi terakhir: {config.lastSyncAt ? new Date(config.lastSyncAt).toLocaleString('id-ID') : 'Belum pernah'}
+                  <div className="flex items-start sm:items-center text-xs sm:text-sm text-slate-600">
+                    <ClockIcon className="h-4 w-4 mr-2 text-slate-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+                    <span className="break-words">Sinkronisasi terakhir: {config.lastSyncAt ? new Date(config.lastSyncAt).toLocaleString('id-ID') : 'Belum pernah'}</span>
                   </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <CheckCircleIcon className="h-4 w-4 mr-2 text-green-500" />
-                    Total tersinkronkan: <span className="font-semibold ml-1">{config.totalSynced || 0}</span> transaksi
+                  <div className="flex items-center text-xs sm:text-sm text-slate-600">
+                    <CheckCircleIcon className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
+                    <span>Total: <span className="font-semibold">{config.totalSynced || 0}</span> transaksi</span>
                   </div>
                   {config.autoSync && (
-                    <div className="flex items-center text-sm text-emerald-600">
-                      <CheckCircleIcon className="h-4 w-4 mr-2" />
-                      Sinkronisasi otomatis aktif
+                    <div className="flex items-center text-xs sm:text-sm text-emerald-600">
+                      <CheckCircleIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>Sinkronisasi otomatis aktif</span>
                     </div>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                   <button
                     onClick={() => handleSync(config.id)}
                     disabled={isSyncing[config.id]}
-                    className="px-3 py-1.5 text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 rounded-md flex items-center gap-1 disabled:opacity-50"
+                    className="px-3 py-2 text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 rounded-md flex items-center justify-center gap-1 disabled:opacity-50 col-span-2 sm:col-span-1"
                   >
-                    <ArrowPathIcon className={`h-3 w-3 ${isSyncing[config.id] ? 'animate-spin' : ''}`} />
-                    {isSyncing[config.id] ? 'Menyinkronkan...' : 'Sinkronkan'}
+                    <ArrowPathIcon className={`h-3.5 w-3.5 ${isSyncing[config.id] ? 'animate-spin' : ''}`} />
+                    <span>{isSyncing[config.id] ? 'Menyinkronkan...' : 'Sinkronkan'}</span>
                   </button>
                   <button
                     onClick={() => handleTestConnection(config.id)}
-                    className="px-3 py-1.5 text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1"
+                    className="px-3 py-2 text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1"
                   >
-                    <CheckCircleIcon className="h-3 w-3" />
-                    Tes
+                    <CheckCircleIcon className="h-3.5 w-3.5" />
+                    <span>Tes</span>
                   </button>
                   <button
                     onClick={() => handleViewHistory(config.id)}
-                    className="px-3 py-1.5 text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1"
+                    className="px-3 py-2 text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1"
                   >
-                    <ClockIcon className="h-3 w-3" />
-                    Riwayat
+                    <ClockIcon className="h-3.5 w-3.5" />
+                    <span>Riwayat</span>
                   </button>
                   <button
                     onClick={() => handleOpenModal(config)}
-                    className="px-3 py-1.5 text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1"
+                    className="px-3 py-2 text-xs font-medium bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1"
                   >
-                    <PencilIcon className="h-3 w-3" />
-                    Edit
+                    <PencilIcon className="h-3.5 w-3.5" />
+                    <span>Edit</span>
                   </button>
                   <button
                     onClick={() => handleDelete(config.id)}
-                    className="px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 rounded-md flex items-center gap-1"
+                    className="px-3 py-2 text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 rounded-md flex items-center justify-center gap-1"
                   >
-                    <TrashIcon className="h-3 w-3" />
-                    Hapus
+                    <TrashIcon className="h-3.5 w-3.5" />
+                    <span>Hapus</span>
                   </button>
                 </div>
               </div>
@@ -433,11 +434,11 @@ export default function GoogleSheetsPage() {
           ))}
 
           {configs.length === 0 && (
-            <div className="col-span-2 bg-white rounded-lg shadow-sm border border-slate-200 p-12 text-center">
-              <DocumentTextIcon className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500 mb-2">Belum ada konfigurasi Google Sheets</p>
+            <div className="col-span-1 md:col-span-2 bg-white rounded-lg shadow-sm border border-slate-200 p-8 sm:p-12 text-center">
+              <DocumentTextIcon className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-4" />
+              <p className="text-sm sm:text-base text-slate-500 mb-2">Belum ada konfigurasi Google Sheets</p>
               <p className="text-xs text-slate-400 mb-4">Klik tutorial untuk mempelajari cara setup</p>
-              <div className="flex gap-2 justify-center">
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button onClick={() => setShowTutorialModal(true)} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200">
                   <QuestionMarkCircleIcon className="h-4 w-4" />
                   Lihat Tutorial
