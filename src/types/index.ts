@@ -149,3 +149,107 @@ export interface SyncCompletedEvent extends SyncEvent {
 export interface SyncErrorEvent extends SyncEvent {
   error: string
 }
+
+// Additional types for new features
+export interface Flag {
+  id: number
+  name: string
+  description: string
+  color: string
+  icon: string
+  severity: 'low' | 'medium' | 'high'
+  notificationTemplateId?: number
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface FlagMapping {
+  id: number
+  transactionId: number
+  flagId: number
+  notes?: string
+  createdAt: string
+  updatedAt?: string
+  transaction?: Transaction
+  flag?: Flag
+}
+
+export interface CronSchedule {
+  id: number
+  accountId?: number
+  cronExpression: string
+  enabled: boolean
+  description?: string
+  lastRun?: string
+  nextRun?: string
+  status?: string
+  createdAt: string
+  updatedAt?: string
+  account?: Account
+}
+
+export interface NotificationTemplate {
+  id: number
+  name: string
+  message: string
+  isActive: boolean
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface BsiTransaction {
+  id: number
+  tanggal: string
+  description: string
+  Amount: string
+  type: 'Kredit' | 'Debit'
+  Balance: string
+  flag?: string
+  accountId?: number
+  createdAt?: string
+}
+
+export interface BsiDashboard {
+  totalAccounts: number
+  activeAccounts: number
+  totalTransactions: number
+  todayTransactions: number
+  flaggedTransactions: number
+  totalBalance: number
+  recentTransactions: BsiTransaction[]
+}
+
+export interface UserSettings {
+  profile?: {
+    firstName?: string
+    lastName?: string
+    phone?: string
+    avatar?: string
+  }
+  email?: {
+    emailNotifications?: boolean
+    transactionAlerts?: boolean
+    weeklyReports?: boolean
+  }
+  security?: {
+    twoFactorEnabled?: boolean
+    sessionTimeout?: number
+  }
+  system?: {
+    theme?: string
+    language?: string
+  }
+  notifications?: {
+    pushNotifications?: boolean
+    soundEnabled?: boolean
+  }
+  regional?: {
+    timezone?: string
+    dateFormat?: string
+    currency?: string
+  }
+  advanced?: {
+    debugMode?: boolean
+    apiRateLimit?: number
+  }
+}

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useAuth } from '@/context/AuthContext'
-import { Button, Input, Card, CardHeader, CardTitle, CardContent } from '@/components/ui'
-import { EyeIcon, EyeSlashIcon, ShieldCheckIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,11 +12,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const { login, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
       router.replace('/admin')
@@ -32,7 +31,7 @@ export default function LoginPage() {
       await login(email, password)
       router.push('/admin')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : 'Login gagal')
     } finally {
       setIsLoading(false)
     }
@@ -41,156 +40,127 @@ export default function LoginPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-green-600 border-t-transparent"></div>
+          <p className="text-gray-600 text-sm">Memuat...</p>
+        </div>
       </div>
     )
   }
 
   if (isAuthenticated) {
-    return null // Will redirect
+    return null
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25px 25px, rgba(255,255,255,0.1) 2px, transparent 0)`,
-          backgroundSize: '50px 50px'
-        }}></div>
-      </div>
-      
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-blue-500/10 rounded-full blur-xl"></div>
-      <div className="absolute bottom-20 right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-xl"></div>
-      <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-cyan-500/10 rounded-full blur-xl"></div>
-      
-      <div className="relative max-w-md w-full space-y-8">
-        {/* Header Section */}
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-            <ShieldCheckIcon className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo Section */}
+        <div className="text-center mb-8">
+          <div className="inline-block mb-4">
+            <Image
+              src="/image/logo-cuzbsi.png"
+              alt="CUZBSI Logo"
+              width={140}
+              height={140}
+              className="object-contain"
+            />
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">
-            CUZBSI Admin Panel
-          </h2>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            Secure access to BSI transaction management system
-          </p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">CUZBSI Dashboard</h1>
+          <p className="text-sm text-gray-500">Masuk ke akun Anda</p>
         </div>
 
         {/* Login Card */}
-        <Card className="backdrop-blur-sm bg-white/10 border-white/20 shadow-2xl">
-          <CardHeader className="text-center pb-6">
-            <div className="flex items-center justify-center mb-3">
-              <LockClosedIcon className="h-5 w-5 text-blue-400 mr-2" />
-              <CardTitle className="text-white text-lg font-semibold">Sign in to your account</CardTitle>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                placeholder="admin@multimutasi.com"
+              />
             </div>
-            <p className="text-slate-300 text-sm">Enter your credentials to access the dashboard</p>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <form className="space-y-5" onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <Input
-                  label="Email address"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@multimutasi.com"
-                  className="bg-white/5 border-white/20 text-white placeholder-slate-400 focus:border-blue-400 focus:ring-blue-400/20"
-                  error={error && !email ? 'Email is required' : ''}
-                />
 
-                <div className="relative">
-                  <Input
-                    label="Password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="bg-white/5 border-white/20 text-white placeholder-slate-400 focus:border-blue-400 focus:ring-blue-400/20 pr-10"
-                    error={error && !password ? 'Password is required' : ''}
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-slate-400 hover:text-white transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-300 text-sm p-4 rounded-lg flex items-center">
-                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  {error}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                loading={isLoading}
-                disabled={!email || !password}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Signing in...
-                  </div>
-                ) : (
-                  'Sign in'
-                )}
-              </Button>
-            </form>
-
-            {/* Divider */}
-            <div className="mt-8 mb-6">
+            {/* Password Input */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
               <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/20"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-transparent text-slate-400">Demo Credentials</span>
-                </div>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* Demo Credentials */}
-            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-5">
-              <div className="flex items-center mb-3">
-                <div className="h-8 w-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
-                  <ShieldCheckIcon className="h-4 w-4 text-blue-400" />
-                </div>
-                <p className="font-semibold text-blue-300 text-sm">Demo Access</p>
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+                {error}
               </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Email:</span>
-                  <span className="text-white font-mono bg-white/10 px-2 py-1 rounded text-xs">admin@multimutasi.com</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Password:</span>
-                  <span className="text-white font-mono bg-white/10 px-2 py-1 rounded text-xs">admin123</span>
-                </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!email || !password || isLoading}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? 'Memproses...' : 'Masuk'}
+            </button>
+          </form>
+
+          {/* Demo Credentials */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-xs text-gray-500 font-medium mb-3">Akun Demo:</p>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Email:</span>
+                <code className="bg-gray-100 text-gray-800 px-3 py-1 rounded font-mono">
+                  admin@multimutasi.com
+                </code>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Password:</span>
+                <code className="bg-gray-100 text-gray-800 px-3 py-1 rounded font-mono">
+                  admin123
+                </code>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          © 2025 CUZBSI. All rights reserved.
+        </p>
       </div>
     </div>
   )

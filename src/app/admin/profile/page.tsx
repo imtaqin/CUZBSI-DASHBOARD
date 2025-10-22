@@ -1,214 +1,282 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AdminLayout } from '@/components/layout'
-import { Card, CardContent, CardHeader, CardTitle, Button, Input, Badge } from '@/components/ui'
+import { Card, CardContent, CardHeader, CardTitle, Button, Input, LoadingPage } from '@/components/ui'
+import { apiService } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
-import { formatDate } from '@/lib/utils'
-import {
-  UserIcon,
-  EnvelopeIcon,
-  KeyIcon,
-  ShieldCheckIcon,
-  CalendarDaysIcon
-} from '@heroicons/react/24/outline'
+import { UserIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 
 export default function ProfilePage() {
-  const { user } = useAuth()
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || ''
+  const { user, updateUser } = useAuth()
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    avatar: ''
   })
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
-  const handleSave = () => {
-    // Here you would call the API to update user profile
-    console.log('Saving profile:', formData)
-    setIsEditing(false)
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        phone: '',
+        avatar: ''
+      })
+    }
+  }, [user])
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setIsLoading(true)
+
+    try {
+      const response = await apiService.updateProfile(profileData)
+      if (response.success) {
+        setSuccess('Profile updated successfully')
+        updateUser(response.data.user)
+      } else {
+        setError(response.message)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update profile')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleCancel = () => {
-    setFormData({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || ''
-    })
-    setIsEditing(false)
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New password and confirmation do not match')
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await apiService.changePassword(passwordData)
+      if (response.success) {
+        setSuccess('Password changed successfully')
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        })
+      } else {
+        setError(response.message)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change password')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  if (!user) return null
+  if (!user) {
+    return (
+      <AdminLayout title="Profile" description="User profile management">
+        <LoadingPage text="Loading profile..." />
+      </AdminLayout>
+    )
+  }
 
   return (
-    <AdminLayout title="Profil" description="Kelola profil akun dan pengaturan Anda">
+    <AdminLayout title="Profile" description="User profile management">
       <div className="space-y-6">
-        {/* Profile Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <UserIcon className="h-5 w-5 mr-2" />
-              Informasi Profil
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="h-16 w-16 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-xl font-bold text-white">
-                    {user.firstName[0]}{user.lastName[0]}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {user.firstName} {user.lastName}
-                  </h3>
-                  <p className="text-gray-500">{user.email}</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    {user.Roles.map((role) => (
-                      <Badge key={role.id} variant="secondary">
-                        {role.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <Button
-                onClick={() => setIsEditing(!isEditing)}
-                variant={isEditing ? "outline" : "default"}
-              >
-                {isEditing ? 'Batal' : 'Edit Profil'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-white">Profile</h1>
+          <p className="text-slate-400">Manage your personal information and security settings</p>
+        </div>
+
+        {/* Error/Success Messages */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-300 text-sm p-4 rounded-lg">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-500/10 border border-green-500/20 text-green-300 text-sm p-4 rounded-lg">
+            {success}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Personal Information */}
+          {/* Profile Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Informasi Pribadi</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <UserIcon className="h-5 w-5" />
+                Profile Information
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {isEditing ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input
-                      label="Nama Depan"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    />
-                    <Input
-                      label="Nama Belakang"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    />
-                  </div>
+            <CardContent>
+              <form onSubmit={handleProfileUpdate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Email Address
+                  </label>
                   <Input
-                    label="Alamat Email"
                     type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    value={user.email}
+                    disabled
+                    className="bg-slate-800 border-slate-600 text-slate-400"
                   />
-                  <div className="flex space-x-3 pt-4">
-                    <Button onClick={handleSave}>Simpan Perubahan</Button>
-                    <Button variant="outline" onClick={handleCancel}>Batal</Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Nama Depan</label>
-                      <div className="mt-1 text-sm text-gray-900">{user.firstName}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Nama Belakang</label>
-                      <div className="mt-1 text-sm text-gray-900">{user.lastName}</div>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Alamat Email</label>
-                    <div className="mt-1 text-sm text-gray-900 flex items-center">
-                      <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
-                      {user.email}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Status Akun</label>
-                    <div className="mt-1">
-                      <Badge variant={user.isActive ? "success" : "destructive"}>
-                        {user.isActive ? "Aktif" : "Tidak Aktif"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Anggota Sejak</label>
-                    <div className="mt-1 text-sm text-gray-900 flex items-center">
-                      <CalendarDaysIcon className="h-4 w-4 mr-2 text-gray-400" />
-                      {formatDate(user.createdAt)}
-                    </div>
-                  </div>
-                </>
-              )}
+                  <p className="mt-1 text-xs text-slate-400">Email cannot be changed</p>
+                </div>
+
+                <Input
+                  label="First Name"
+                  value={profileData.firstName}
+                  onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
+                  placeholder="Enter your first name"
+                />
+
+                <Input
+                  label="Last Name"
+                  value={profileData.lastName}
+                  onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
+                  placeholder="Enter your last name"
+                />
+
+                <Input
+                  label="Phone Number"
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  placeholder="Enter your phone number"
+                />
+
+                <Input
+                  label="Avatar URL"
+                  value={profileData.avatar}
+                  onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
+                  placeholder="Enter avatar URL"
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Updating...' : 'Update Profile'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
 
           {/* Security Settings */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <ShieldCheckIcon className="h-5 w-5 mr-2" />
-                Pengaturan Keamanan
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheckIcon className="h-5 w-5" />
+                Security Settings
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-500">Kata Sandi</label>
-                <div className="mt-1 flex items-center justify-between">
-                  <span className="text-sm text-gray-400">••••••••••••</span>
-                  <Button variant="outline" size="sm">
-                    <KeyIcon className="h-4 w-4 mr-2" />
-                    Ubah Kata Sandi
-                  </Button>
+            <CardContent>
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <Input
+                  label="Current Password"
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  placeholder="Enter your current password"
+                  required
+                />
+
+                <Input
+                  label="New Password"
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  placeholder="Enter your new password"
+                  required
+                />
+
+                <Input
+                  label="Confirm New Password"
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  placeholder="Confirm your new password"
+                  required
+                />
+
+                <div className="bg-slate-800 p-3 rounded-lg">
+                  <h4 className="text-sm font-medium text-slate-300 mb-2">Password Requirements:</h4>
+                  <ul className="text-xs text-slate-400 space-y-1">
+                    <li>• At least 6 characters long</li>
+                    <li>• Include both uppercase and lowercase letters</li>
+                    <li>• Include at least one number</li>
+                    <li>• Include at least one special character</li>
+                  </ul>
                 </div>
-              </div>
-              
-              <div className="border-t pt-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Peran & Izin</h4>
-                <div className="space-y-3">
-                  {user.Roles.map((role) => (
-                    <div key={role.id} className="border border-gray-200 rounded-md p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-sm">{role.name}</div>
-                          <div className="text-xs text-gray-500">{role.description}</div>
-                        </div>
-                        <Badge variant="secondary">{role.name}</Badge>
-                      </div>
-                      {role.Permissions && role.Permissions.length > 0 && (
-                        <div className="mt-2">
-                          <div className="text-xs text-gray-500 mb-1">Izin:</div>
-                          <div className="flex flex-wrap gap-1">
-                            {role.Permissions.slice(0, 3).map((permission) => (
-                              <Badge key={permission.id} variant="outline" className="text-xs">
-                                {permission.name}
-                              </Badge>
-                            ))}
-                            {role.Permissions.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{role.Permissions.length - 3} lainnya
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Changing...' : 'Change Password'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>
+
+        {/* User Roles */}
+        <Card>
+          <CardHeader>
+            <CardTitle>User Roles & Permissions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {user.Roles && user.Roles.length > 0 ? (
+                user.Roles.map((role) => (
+                  <div key={role.id} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-white">{role.name}</h4>
+                      <p className="text-sm text-slate-400">{role.description}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {role.Permissions && role.Permissions.map((permission) => (
+                        <span
+                          key={permission.id}
+                          className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"
+                        >
+                          {permission.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-slate-400">
+                  No roles assigned
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   )

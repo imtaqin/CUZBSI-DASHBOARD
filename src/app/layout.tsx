@@ -1,36 +1,34 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
-import { HydrationProvider } from "@/components/HydrationProvider";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { Sidebar } from '@/components/layout'
+import { AuthProvider } from '@/context/AuthContext'
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Panel Admin CUZBSI",
-  description: "Sistem Manajemen Transaksi Bank Syariah Indonesia (BSI)",
-};
+  title: 'CUZBSI Dashboard',
+  description: 'CUZBSI Transaction Management System',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="id">
-      <body 
-        className={`${inter.variable} font-sans antialiased`}
-        suppressHydrationWarning={true}
-      >
-        <HydrationProvider>
-          <AuthProvider>
+    <html lang="en">
+      <body className={`${inter.className} bg-slate-50`}>
+        <AuthProvider>
+          {/* Fixed Sidebar - Always visible on desktop */}
+          <Sidebar />
+
+          {/* Main content - Has left padding to account for fixed sidebar */}
+          <div className="lg:pl-64">
             {children}
-          </AuthProvider>
-        </HydrationProvider>
+          </div>
+        </AuthProvider>
       </body>
     </html>
-  );
+  )
 }

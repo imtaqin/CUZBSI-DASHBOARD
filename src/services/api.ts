@@ -117,13 +117,6 @@ class ApiService {
     return response.data
   }
 
-  async changePassword(id: number, passwords: {
-    currentPassword: string
-    newPassword: string
-  }): Promise<ApiResponse<null>> {
-    const response = await this.api.patch<ApiResponse<null>>(`/api/users/${id}/password`, passwords)
-    return response.data
-  }
 
   // Roles Management
   async getRoles(params?: {
@@ -256,6 +249,373 @@ class ApiService {
     return response.data
   }
 
+  async getAllBanks(): Promise<ApiResponse<{ banks: Bank[] }>> {
+    const response = await this.api.get<ApiResponse<{ banks: Bank[] }>>('/api/banks/all')
+    return response.data
+  }
+
+  // Flags Management
+  async getFlags(params?: {
+    page?: number
+    limit?: number
+    search?: string
+  }): Promise<ApiResponse<{ flags: any[]; pagination: PaginationInfo }>> {
+    const response = await this.api.get<ApiResponse<{ flags: any[]; pagination: PaginationInfo }>>('/api/flags', {
+      params,
+    })
+    return response.data
+  }
+
+  async getFlag(id: number): Promise<ApiResponse<{ flag: any }>> {
+    const response = await this.api.get<ApiResponse<{ flag: any }>>(`/api/flags/${id}`)
+    return response.data
+  }
+
+  async createFlag(flagData: {
+    name: string
+    description: string
+    color: string
+    icon: string
+    severity: string
+    notificationTemplateId?: number
+  }): Promise<ApiResponse<{ flag: any }>> {
+    const response = await this.api.post<ApiResponse<{ flag: any }>>('/api/flags', flagData)
+    return response.data
+  }
+
+  async updateFlag(id: number, flagData: {
+    name?: string
+    description?: string
+    color?: string
+    icon?: string
+    severity?: string
+    notificationTemplateId?: number
+  }): Promise<ApiResponse<{ flag: any }>> {
+    const response = await this.api.put<ApiResponse<{ flag: any }>>(`/api/flags/${id}`, flagData)
+    return response.data
+  }
+
+  async deleteFlag(id: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete<ApiResponse<null>>(`/api/flags/${id}`)
+    return response.data
+  }
+
+  // Flag Mappings
+  async getFlagMappings(params?: {
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ flagMappings: any[]; pagination: PaginationInfo }>> {
+    const response = await this.api.get<ApiResponse<{ flagMappings: any[]; pagination: PaginationInfo }>>('/api/flag-mappings', {
+      params,
+    })
+    return response.data
+  }
+
+  async upsertFlagMapping(data: {
+    transactionId: number
+    flagId: number
+    notes?: string
+  }): Promise<ApiResponse<{ flagMapping: any }>> {
+    const response = await this.api.post<ApiResponse<{ flagMapping: any }>>('/api/flag-mappings', data)
+    return response.data
+  }
+
+  async updateFlagMapping(id: number, data: {
+    flagId?: number
+    notes?: string
+  }): Promise<ApiResponse<{ flagMapping: any }>> {
+    const response = await this.api.put<ApiResponse<{ flagMapping: any }>>(`/api/flag-mappings/${id}`, data)
+    return response.data
+  }
+
+  async deleteFlagMapping(id: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete<ApiResponse<null>>(`/api/flag-mappings/${id}`)
+    return response.data
+  }
+
+  // Cron Schedules
+  async getCronSchedules(params?: {
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ schedules: any[]; pagination: PaginationInfo }>> {
+    const response = await this.api.get<ApiResponse<{ schedules: any[]; pagination: PaginationInfo }>>('/api/cron-schedules', {
+      params,
+    })
+    return response.data
+  }
+
+  async getCronScheduleStats(): Promise<ApiResponse<{ stats: any }>> {
+    const response = await this.api.get<ApiResponse<{ stats: any }>>('/api/cron-schedules/stats')
+    return response.data
+  }
+
+  async getCronSchedule(id: number): Promise<ApiResponse<{ schedule: any }>> {
+    const response = await this.api.get<ApiResponse<{ schedule: any }>>(`/api/cron-schedules/${id}`)
+    return response.data
+  }
+
+  async getAccountSchedule(accountId: number): Promise<ApiResponse<{ schedule: any }>> {
+    const response = await this.api.get<ApiResponse<{ schedule: any }>>(`/api/accounts/${accountId}/schedule`)
+    return response.data
+  }
+
+  async upsertSchedule(accountId: number, data: {
+    cronExpression: string
+    enabled: boolean
+    description?: string
+  }): Promise<ApiResponse<{ schedule: any }>> {
+    const response = await this.api.post<ApiResponse<{ schedule: any }>>(`/api/accounts/${accountId}/schedule`, data)
+    return response.data
+  }
+
+  async updateCronSchedule(id: number, data: {
+    cronExpression?: string
+    enabled?: boolean
+    description?: string
+  }): Promise<ApiResponse<{ schedule: any }>> {
+    const response = await this.api.put<ApiResponse<{ schedule: any }>>(`/api/cron-schedules/${id}`, data)
+    return response.data
+  }
+
+  async toggleCronSchedule(id: number): Promise<ApiResponse<{ schedule: any }>> {
+    const response = await this.api.patch<ApiResponse<{ schedule: any }>>(`/api/cron-schedules/${id}/toggle`)
+    return response.data
+  }
+
+  async deleteCronSchedule(id: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete<ApiResponse<null>>(`/api/cron-schedules/${id}`)
+    return response.data
+  }
+
+  // Notification Templates
+  async getNotificationTemplates(params?: {
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ templates: any[]; pagination: PaginationInfo }>> {
+    const response = await this.api.get<ApiResponse<{ templates: any[]; pagination: PaginationInfo }>>('/api/notification-templates', {
+      params,
+    })
+    return response.data
+  }
+
+  async getTemplateVariables(): Promise<ApiResponse<{ variables: string[] }>> {
+    const response = await this.api.get<ApiResponse<{ variables: string[] }>>('/api/notification-templates/variables')
+    return response.data
+  }
+
+  async getNotificationTemplate(id: number): Promise<ApiResponse<{ template: any }>> {
+    const response = await this.api.get<ApiResponse<{ template: any }>>(`/api/notification-templates/${id}`)
+    return response.data
+  }
+
+  async getTemplateByFlag(flagId: number): Promise<ApiResponse<{ template: any }>> {
+    const response = await this.api.get<ApiResponse<{ template: any }>>(`/api/notification-templates/flag/${flagId}`)
+    return response.data
+  }
+
+  async createNotificationTemplate(data: {
+    name: string
+    message: string
+    isActive?: boolean
+  }): Promise<ApiResponse<{ template: any }>> {
+    const response = await this.api.post<ApiResponse<{ template: any }>>('/api/notification-templates', data)
+    return response.data
+  }
+
+  async updateNotificationTemplate(id: number, data: {
+    name?: string
+    message?: string
+    isActive?: boolean
+  }): Promise<ApiResponse<{ template: any }>> {
+    const response = await this.api.put<ApiResponse<{ template: any }>>(`/api/notification-templates/${id}`, data)
+    return response.data
+  }
+
+  async deleteNotificationTemplate(id: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete<ApiResponse<null>>(`/api/notification-templates/${id}`)
+    return response.data
+  }
+
+  async previewTemplate(id: number, data: {
+    transactionId?: number
+    testData?: Record<string, any>
+  }): Promise<ApiResponse<{ preview: string }>> {
+    const response = await this.api.post<ApiResponse<{ preview: string }>>(`/api/notification-templates/${id}/preview`, data)
+    return response.data
+  }
+
+  // BSI API
+  async getBsiDashboard(): Promise<ApiResponse<{ dashboard: any }>> {
+    const response = await this.api.get<ApiResponse<{ dashboard: any }>>('/api/bsi/dashboard')
+    return response.data
+  }
+
+  async getBsiTransactions(params?: {
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ transactions: any[]; pagination: PaginationInfo }>> {
+    const response = await this.api.get<ApiResponse<{ transactions: any[]; pagination: PaginationInfo }>>('/api/bsi/transactions', {
+      params,
+    })
+    return response.data
+  }
+
+  async getBsiTransaction(id: number): Promise<ApiResponse<{ transaction: any }>> {
+    const response = await this.api.get<ApiResponse<{ transaction: any }>>(`/api/bsi/transactions/${id}`)
+    return response.data
+  }
+
+  async saveBsiAccount(data: {
+    bankId: number
+    accountNumber: string
+    accountName: string
+    username: string
+    password: string
+    pin: string
+  }): Promise<ApiResponse<{ account: any }>> {
+    const response = await this.api.post<ApiResponse<{ account: any }>>('/api/bsi/accounts', data)
+    return response.data
+  }
+
+  async updateBsiAccount(id: number, data: {
+    accountName?: string
+    username?: string
+    password?: string
+  }): Promise<ApiResponse<{ account: any }>> {
+    const response = await this.api.put<ApiResponse<{ account: any }>>(`/api/bsi/accounts/${id}`, data)
+    return response.data
+  }
+
+  async getBsiScrapingOption(accountId: number): Promise<ApiResponse<{ option: any }>> {
+    const response = await this.api.get<ApiResponse<{ option: any }>>(`/api/bsi/accounts/${accountId}/scraping`)
+    return response.data
+  }
+
+  async updateBsiScrapingOption(accountId: number, data: {
+    isActive?: boolean
+    cronExpression?: string
+    lookbackDays?: number
+    maxRetries?: number
+    browserType?: 'chrome' | 'firefox'
+    daysOfWeek?: string
+    throttleTime?: number
+  }): Promise<ApiResponse<{ option: any }>> {
+    const response = await this.api.put<ApiResponse<{ option: any }>>(`/api/bsi/accounts/${accountId}/scraping`, data)
+    return response.data
+  }
+
+  async triggerBsiSync(accountId: number): Promise<ApiResponse<{ sync: any }>> {
+    const response = await this.api.post<ApiResponse<{ sync: any }>>(`/api/bsi/accounts/${accountId}/sync`)
+    return response.data
+  }
+
+  async syncAllBsiAccounts(): Promise<ApiResponse<{ sync: any }>> {
+    const response = await this.api.post<ApiResponse<{ sync: any }>>('/api/bsi/accounts/sync-all')
+    return response.data
+  }
+
+  async flagBsiTransaction(id: number, data: {
+    flagId: number
+    notes?: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.post<ApiResponse<null>>(`/api/bsi/transactions/${id}/flag`, data)
+    return response.data
+  }
+
+  async getBsiFlagMappings(): Promise<ApiResponse<{ mappings: any[] }>> {
+    const response = await this.api.get<ApiResponse<{ mappings: any[] }>>('/api/bsi/flag-mappings')
+    return response.data
+  }
+
+  async removeBsiFlagMapping(transactionId: number): Promise<ApiResponse<null>> {
+    const response = await this.api.delete<ApiResponse<null>>(`/api/bsi/flag-mappings?transactionId=${transactionId}`)
+    return response.data
+  }
+
+  // Settings
+  async getSettings(): Promise<ApiResponse<{ settings: any }>> {
+    const response = await this.api.get<ApiResponse<{ settings: any }>>('/api/settings')
+    return response.data
+  }
+
+  async updateProfile(data: {
+    firstName?: string
+    lastName?: string
+    phone?: string
+    avatar?: string
+  }): Promise<ApiResponse<{ user: User }>> {
+    const response = await this.api.put<ApiResponse<{ user: User }>>('/api/settings/profile', data)
+    return response.data
+  }
+
+  async changePassword(data: {
+    currentPassword: string
+    newPassword: string
+    confirmPassword: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.post<ApiResponse<null>>('/api/settings/change-password', data)
+    return response.data
+  }
+
+  async updateEmailPreferences(data: {
+    emailNotifications?: boolean
+    transactionAlerts?: boolean
+    weeklyReports?: boolean
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put<ApiResponse<null>>('/api/settings/email-preferences', data)
+    return response.data
+  }
+
+  async updateSecuritySettings(data: {
+    twoFactorEnabled?: boolean
+    sessionTimeout?: number
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put<ApiResponse<null>>('/api/settings/security', data)
+    return response.data
+  }
+
+  async updateSystemSettings(data: {
+    theme?: string
+    language?: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put<ApiResponse<null>>('/api/settings/system', data)
+    return response.data
+  }
+
+  async updateNotificationSettings(data: {
+    pushNotifications?: boolean
+    soundEnabled?: boolean
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put<ApiResponse<null>>('/api/settings/notifications', data)
+    return response.data
+  }
+
+  async updateRegionalSettings(data: {
+    timezone?: string
+    dateFormat?: string
+    currency?: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put<ApiResponse<null>>('/api/settings/regional', data)
+    return response.data
+  }
+
+  async updateAdvancedSettings(data: {
+    debugMode?: boolean
+    apiRateLimit?: number
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.put<ApiResponse<null>>('/api/settings/advanced', data)
+    return response.data
+  }
+
+  async exportData(data: {
+    format?: string
+    includeTransactions?: boolean
+    includeAccounts?: boolean
+  }): Promise<ApiResponse<{ exportUrl: string }>> {
+    const response = await this.api.post<ApiResponse<{ exportUrl: string }>>('/api/settings/export-data', data)
+    return response.data
+  }
+
   // Transactions
   async getTransactions(params?: {
     page?: number
@@ -282,44 +642,34 @@ class ApiService {
     return response.data
   }
 
-  async flagTransaction(id: number, flag: string): Promise<ApiResponse<null>> {
-    const response = await this.api.put(`/transactions/${id}/flag`, { flag })
+  async getFlaggedTransactions(params?: {
+    page?: number
+    limit?: number
+  }): Promise<ApiResponse<{ transactions: any[]; pagination: PaginationInfo }>> {
+    const response = await this.api.get<ApiResponse<{ transactions: any[]; pagination: PaginationInfo }>>('/api/transactions/flagged', {
+      params,
+    })
+    return response.data
+  }
+
+  async getTransactionFlags(): Promise<ApiResponse<{ flags: any[] }>> {
+    const response = await this.api.get<ApiResponse<{ flags: any[] }>>('/api/transactions/flags')
+    return response.data
+  }
+
+  async flagTransaction(id: number, data: {
+    flagId: number
+    notes?: string
+  }): Promise<ApiResponse<null>> {
+    const response = await this.api.post<ApiResponse<null>>(`/api/transactions/${id}/flag`, data)
     return response.data
   }
 
   async updateTransactionFlag(id: number, data: {
-    flagId?: string
+    flagId?: number
     notes?: string
   }): Promise<ApiResponse<null>> {
-    const response = await this.api.put(`/transactions/${id}/flag`, data)
-    return response.data
-  }
-
-  async getFlagMappings(): Promise<ApiResponse<{ flagMappings: any[] }>> {
-    const response = await this.api.get<ApiResponse<{ flagMappings: any[] }>>('/api/transactions/flags')
-    return response.data
-  }
-
-  async createFlagMapping(data: {
-    accountNumber: string
-    flag: string
-    keywords: string
-  }): Promise<ApiResponse<null>> {
-    const response = await this.api.post('/api/transactions/flags', data)
-    return response.data
-  }
-
-  async updateFlagMapping(id: number, data: {
-    accountNumber?: string
-    flag?: string
-    keywords?: string
-  }): Promise<ApiResponse<null>> {
-    const response = await this.api.put(`/api/transactions/flags/${id}`, data)
-    return response.data
-  }
-
-  async deleteFlagMapping(id: number): Promise<ApiResponse<null>> {
-    const response = await this.api.delete(`/api/transactions/flags/${id}`)
+    const response = await this.api.put<ApiResponse<null>>(`/api/transactions/${id}/flag`, data)
     return response.data
   }
 
@@ -369,6 +719,98 @@ class ApiService {
   // Profile
   async getProfile(): Promise<ApiResponse<{ user: User }>> {
     const response = await this.api.get<ApiResponse<{ user: User }>>('/api/profile')
+    return response.data
+  }
+
+  // Google Sheets
+  async getGoogleSheets(): Promise<ApiResponse<{ configs: any[] }>> {
+    const response = await this.api.get<ApiResponse<{ configs: any[] }>>('/api/google-sheets')
+    return response.data
+  }
+
+  async getGoogleSheet(id: number): Promise<ApiResponse<{ config: any }>> {
+    const response = await this.api.get<ApiResponse<{ config: any }>>(`/api/google-sheets/${id}`)
+    return response.data
+  }
+
+  async createGoogleSheet(data: any): Promise<ApiResponse<{ config: any }>> {
+    const response = await this.api.post<ApiResponse<{ config: any }>>('/api/google-sheets', data)
+    return response.data
+  }
+
+  async updateGoogleSheet(id: number, data: any): Promise<ApiResponse<{ config: any }>> {
+    const response = await this.api.put<ApiResponse<{ config: any }>>(`/api/google-sheets/${id}`, data)
+    return response.data
+  }
+
+  async deleteGoogleSheet(id: number): Promise<ApiResponse<any>> {
+    const response = await this.api.delete<ApiResponse<any>>(`/api/google-sheets/${id}`)
+    return response.data
+  }
+
+  async testGoogleSheet(id: number): Promise<ApiResponse<{ message: string }>> {
+    const response = await this.api.post<ApiResponse<{ message: string }>>(`/api/google-sheets/${id}/test`)
+    return response.data
+  }
+
+  async syncGoogleSheet(id: number, data: { transactionIds?: number[] }): Promise<ApiResponse<{ syncedCount: number }>> {
+    const response = await this.api.post<ApiResponse<{ syncedCount: number }>>(`/api/google-sheets/${id}/sync`, data)
+    return response.data
+  }
+
+  async getGoogleSheetHistory(id: number): Promise<ApiResponse<{ history: any[] }>> {
+    const response = await this.api.get<ApiResponse<{ history: any[] }>>(`/api/google-sheets/${id}/history`)
+    return response.data
+  }
+
+  async toggleGoogleSheet(id: number): Promise<ApiResponse<{ config: any }>> {
+    const response = await this.api.patch<ApiResponse<{ config: any }>>(`/api/google-sheets/${id}/toggle`)
+    return response.data
+  }
+
+  // API Keys Management
+  async getApiKeys(params?: { serviceName?: string; isActive?: boolean; page?: number; limit?: number }): Promise<ApiResponse<{ apiKeys: any[] }>> {
+    const response = await this.api.get<ApiResponse<{ apiKeys: any[] }>>('/api/api-keys', { params })
+    return response.data
+  }
+
+  async getApiKeyServices(): Promise<ApiResponse<{ services: any[] }>> {
+    const response = await this.api.get<ApiResponse<{ services: any[] }>>('/api/api-keys/services')
+    return response.data
+  }
+
+  async getApiKeyStats(): Promise<ApiResponse<any>> {
+    const response = await this.api.get<ApiResponse<any>>('/api/api-keys/stats')
+    return response.data
+  }
+
+  async getApiKey(id: number): Promise<ApiResponse<{ apiKey: any }>> {
+    const response = await this.api.get<ApiResponse<{ apiKey: any }>>(`/api/api-keys/${id}`)
+    return response.data
+  }
+
+  async createApiKey(data: any): Promise<ApiResponse<{ apiKey: any }>> {
+    const response = await this.api.post<ApiResponse<{ apiKey: any }>>('/api/api-keys', data)
+    return response.data
+  }
+
+  async updateApiKey(id: number, data: any): Promise<ApiResponse<{ apiKey: any }>> {
+    const response = await this.api.put<ApiResponse<{ apiKey: any }>>(`/api/api-keys/${id}`, data)
+    return response.data
+  }
+
+  async deleteApiKey(id: number): Promise<ApiResponse<any>> {
+    const response = await this.api.delete<ApiResponse<any>>(`/api/api-keys/${id}`)
+    return response.data
+  }
+
+  async setApiKeyPrimary(id: number): Promise<ApiResponse<{ apiKey: any }>> {
+    const response = await this.api.patch<ApiResponse<{ apiKey: any }>>(`/api/api-keys/${id}/set-primary`)
+    return response.data
+  }
+
+  async toggleApiKey(id: number): Promise<ApiResponse<{ apiKey: any }>> {
+    const response = await this.api.patch<ApiResponse<{ apiKey: any }>>(`/api/api-keys/${id}/toggle`)
     return response.data
   }
 }

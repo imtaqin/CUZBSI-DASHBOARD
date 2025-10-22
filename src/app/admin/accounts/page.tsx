@@ -38,9 +38,10 @@ interface CronFormData {
   cronExpression: string
   browserType: 'chrome' | 'firefox'
   maxRetries: number
-  startTime: string
-  endTime: string
-  daysOfWeek: number[]
+  lookbackDays?: number
+  startTime?: string
+  endTime?: string
+  daysOfWeek?: number[]
 }
 
 export default function AccountsPage() {
@@ -68,7 +69,18 @@ export default function AccountsPage() {
   const [isSyncSubmitting, setIsSyncSubmitting] = useState(false)
 
   const { register: registerAccount, handleSubmit: handleAccountSubmit, reset: resetAccount, watch: watchAccount, setValue: setValueAccount, formState: { errors: accountErrors } } = useForm<AccountFormData>()
-  const { register: registerCron, handleSubmit: handleCronSubmit, reset: resetCron, watch: watchCron, setValue: setCronValue, formState: { errors: cronErrors } } = useForm<CronFormData>()
+  const { register: registerCron, handleSubmit: handleCronSubmit, reset: resetCron, watch: watchCron, setValue: setCronValue, formState: { errors: cronErrors } } = useForm<CronFormData>({
+    defaultValues: {
+      isActive: true,
+      cronExpression: '*/5 * * * *',
+      browserType: 'chrome',
+      maxRetries: 3,
+      lookbackDays: 2,
+      startTime: '00:00',
+      endTime: '23:59',
+      daysOfWeek: [0, 1, 2, 3, 4, 5, 6]
+    }
+  })
 
   useEffect(() => {
     fetchAccounts()
@@ -116,14 +128,16 @@ export default function AccountsPage() {
       setCronValue('browserType', option.browserType as 'chrome' | 'firefox')
       setCronValue('maxRetries', option.maxRetries)
     } else {
+      // Default values - all active by default
       resetCron({
-        isActive: false,
-        cronExpression: '0 */6 * * *',
+        isActive: true,
+        cronExpression: '*/5 * * * *', // Default to 5 minutes
         browserType: 'chrome',
         maxRetries: 3,
-        startTime: '08:00',
-        endTime: '18:00',
-        daysOfWeek: [1, 2, 3, 4, 5]
+        lookbackDays: 2,
+        startTime: '00:00',
+        endTime: '23:59',
+        daysOfWeek: [0, 1, 2, 3, 4, 5, 6] // All days active
       })
     }
     
@@ -158,26 +172,40 @@ export default function AccountsPage() {
 
     try {
       setIsSubmitting(true)
-      
+      setSubmitError(null)
+
       // Validate required fields
       if (data.isActive && !data.cronExpression) {
-        console.error('Please select a sync frequency')
+        setSubmitError('Please select a sync frequency')
         return
       }
-      
+
       if (data.isActive && !data.browserType) {
-        console.error('Please select a browser type')
+        setSubmitError('Please select a browser type')
         return
       }
-      
-      // Note: This uses the existing API method from the documentation
-      // await apiService.updateScrapingOptions(selectedAccountForCron.id, data)
-      console.log('Updating cron settings:', data)
+
+      // Prepare scraping options data according to API specification
+      const scrapingOptions = {
+        isActive: data.isActive,
+        cronExpression: data.cronExpression,
+        lookbackDays: data.lookbackDays || 2, // Default to 2 days
+        maxRetries: data.maxRetries || 3,
+        browserType: data.browserType,
+        daysOfWeek: data.daysOfWeek ? data.daysOfWeek.join(',') : '0,1,2,3,4,5,6', // Convert array to comma-separated string
+        throttleTime: 0 // Default throttle time
+      }
+
+      // Update scraping options using the correct endpoint
+      await apiService.updateBsiScrapingOption(selectedAccountForCron.id, scrapingOptions)
+
       setIsCronModalOpen(false)
       fetchAccounts()
       resetCron()
+      setSelectedAccountForCron(null)
     } catch (error) {
-      console.error('Failed to update cron settings:', error)
+      console.error('Failed to update scraping options:', error)
+      setSubmitError(error instanceof Error ? error.message : 'Failed to update scraping options')
     } finally {
       setIsSubmitting(false)
     }
@@ -293,124 +321,117 @@ export default function AccountsPage() {
 
   return (
     <AdminLayout title="Akun" description="Kelola akun BSI dan pengaturan sinkronisasi">
-      <div className="space-y-6">
-        {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-slate-400">
-              {accounts.length} akun • {accounts.filter(a => a.isActive).length} aktif
+      <div className="space-y-4">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-slate-200">
+          <div className="flex items-center space-x-6">
+            <div className="text-sm">
+              <span className="font-medium text-slate-900">{accounts.length}</span>
+              <span className="text-slate-500"> Total Akun</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium text-green-600">{accounts.filter(a => a.isActive).length}</span>
+              <span className="text-slate-500"> Aktif</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium text-blue-600">{accounts.filter(a => a.ScrapingOption?.isActive).length}</span>
+              <span className="text-slate-500"> Auto-Sync</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium text-red-600">{accounts.filter(a => a.ScrapingOption?.lastStatus === 'error').length}</span>
+              <span className="text-slate-500"> Error</span>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <Button 
-              onClick={handleCreateAccount} 
-              variant="outline" 
-              className="flex items-center"
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleCreateAccount}
+              variant="outline"
+              size="sm"
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
+              <PlusIcon className="h-4 w-4 mr-1" />
               Tambah Akun
             </Button>
-            <Button onClick={handleSyncAll} className="flex items-center">
-              <RocketLaunchIcon className="h-4 w-4 mr-2" />
-              Sinkronisasi Semua Akun
+            <Button onClick={handleSyncAll} size="sm">
+              <RocketLaunchIcon className="h-4 w-4 mr-1" />
+              Sync Semua
             </Button>
           </div>
         </div>
 
-        {/* Accounts Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <BuildingLibraryIcon className="h-5 w-5 mr-2" />
-              Akun BSI
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
+        {/* Compact DataTable */}
+        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Akun</TableHead>
-                  <TableHead>Bank</TableHead>
-                  <TableHead>Saldo</TableHead>
-                  <TableHead>Status Sinkronisasi</TableHead>
-                  <TableHead>Sinkronisasi Terakhir</TableHead>
-                  <TableHead>Jadwal</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                <TableRow className="bg-slate-50">
+                  <TableHead className="py-2">Nomor Rekening</TableHead>
+                  <TableHead className="py-2">Bank</TableHead>
+                  <TableHead className="py-2">Saldo</TableHead>
+                  <TableHead className="py-2">Status</TableHead>
+                  <TableHead className="py-2">Sync Terakhir</TableHead>
+                  <TableHead className="py-2">Jadwal</TableHead>
+                  <TableHead className="py-2 text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {accounts.map((account) => (
-                  <TableRow key={account.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{account.accountNumber}</div>
-                        <div className="text-sm text-gray-500">
-                          ID Perusahaan: {account.companyId}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Pengguna: {account.username}
-                        </div>
-                      </div>
+                  <TableRow key={account.id} className="hover:bg-slate-50">
+                    <TableCell className="py-2">
+                      <div className="font-medium text-sm">{account.accountNumber}</div>
+                      <div className="text-xs text-slate-500">{account.username}</div>
                     </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{account.Bank.fullName}</div>
-                        <div className="text-sm text-gray-500">{account.Bank.code}</div>
-                      </div>
+                    <TableCell className="py-2">
+                      <div className="text-sm font-medium">{account.Bank.name}</div>
+                      <div className="text-xs text-slate-500">{account.Bank.code}</div>
                     </TableCell>
-                    <TableCell className="font-mono">
+                    <TableCell className="py-2 font-mono text-sm">
                       {formatCurrency(account.lastBalance)}
                     </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {getStatusBadge(account)}
-                        {account.ScrapingOption?.errorMessage && (
-                          <div className="text-xs text-red-600 max-w-xs truncate" title={account.ScrapingOption.errorMessage}>
-                            {account.ScrapingOption.errorMessage}
-                          </div>
-                        )}
-                      </div>
+                    <TableCell className="py-2">
+                      {getStatusBadge(account)}
+                      {account.ScrapingOption?.errorMessage && (
+                        <div className="text-xs text-red-600 max-w-[150px] truncate mt-0.5" title={account.ScrapingOption.errorMessage}>
+                          {account.ScrapingOption.errorMessage}
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <ClockIcon className="h-4 w-4 mr-1" />
-                        {getLastRunInfo(account)}
-                      </div>
+                    <TableCell className="py-2 text-sm text-slate-600">
+                      {getLastRunInfo(account)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2">
                       {account.ScrapingOption ? (
-                        <div className="text-sm">
-                          <div className="font-medium">
+                        <div className="text-xs">
+                          <div className="font-medium text-slate-700">
                             {account.ScrapingOption.cronExpression}
                           </div>
-                          <div className="text-gray-500">
+                          <div className={account.ScrapingOption.isActive ? 'text-green-600' : 'text-slate-400'}>
                             {account.ScrapingOption.isActive ? 'Aktif' : 'Nonaktif'}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-sm">Tidak ada jadwal</span>
+                        <span className="text-slate-400 text-xs">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
+                    <TableCell className="py-2 text-right">
+                      <div className="flex justify-end space-x-1">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleSyncAccount(account.id)}
                           loading={syncingAccounts.has(account.id)}
                           disabled={!account.isActive}
+                          title="Sinkronisasi"
                         >
-                          <PlayIcon className="h-4 w-4 mr-1" />
-                          Sinkronisasi
+                          <PlayIcon className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditCron(account)}
-                          title="Kelola Jadwal Cron"
+                          title="Kelola Jadwal"
                         >
-                          <CogIcon className="h-4 w-4" />
+                          <CogIcon className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -418,69 +439,18 @@ export default function AccountsPage() {
                 ))}
               </TableBody>
             </Table>
-            
-            {accounts.length === 0 && (
-              <div className="text-center py-8 text-slate-400">
-                <BuildingLibraryIcon className="h-12 w-12 mx-auto mb-4 text-slate-500" />
-                <p>Tidak ada akun ditemukan</p>
-                <p className="text-sm">Hubungi administrator untuk menambahkan akun BSI</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CheckCircleIcon className="h-8 w-8 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-white">
-                    {accounts.filter(a => a.ScrapingOption?.lastStatus === 'success').length}
-                  </div>
-                  <div className="text-sm text-slate-400">Successful Syncs</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-white">
-                    {accounts.filter(a => a.ScrapingOption?.lastStatus === 'error').length}
-                  </div>
-                  <div className="text-sm text-slate-400">Failed Syncs</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ClockIcon className="h-8 w-8 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-white">
-                    {accounts.filter(a => a.ScrapingOption?.isActive).length}
-                  </div>
-                  <div className="text-sm text-slate-400">Auto-Sync Enabled</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {accounts.length === 0 && (
+            <div className="text-center py-12 text-slate-400">
+              <BuildingLibraryIcon className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+              <p className="text-sm font-medium">Tidak ada akun ditemukan</p>
+              <p className="text-xs mt-1">Klik "Tambah Akun" untuk menambahkan akun BSI</p>
+            </div>
+          )}
         </div>
 
-        {/* Enhanced Add Account Modal */}
+        {/* Compact Add Account Modal */}
         <Modal
           isOpen={isAccountModalOpen}
           onClose={() => {
@@ -488,234 +458,180 @@ export default function AccountsPage() {
             resetAccount()
             setSubmitError(null)
           }}
-          title="Tambah Akun BSI Baru"
+          title="Tambah Akun BSI"
           size="lg"
         >
-          <form onSubmit={handleAccountSubmit(onSubmitAccount)} className="space-y-6">
-             {/* Header Info */}
-            <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
-              <div className="flex items-center">
-                <BuildingLibraryIcon className="h-8 w-8 text-blue-500 mr-3" />
-                <div>
-                  <h3 className="text-lg font-medium text-white">Integrasi Akun BSI</h3>
-                  <p className="text-sm text-slate-400 mt-1">
-                    Tambahkan akun Bank Syariah Indonesia baru untuk sinkronisasi transaksi otomatis
-                  </p>
-                </div>
-              </div>
-            </div>
-
+          <form onSubmit={handleAccountSubmit(onSubmitAccount)} className="space-y-4">
             {/* Error Display */}
             {submitError && (
-              <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-4">
-                <div className="flex">
-                  <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-red-300">Error</p>
-                    <p className="text-sm text-red-200 mt-1">{submitError}</p>
-                  </div>
-                </div>
+              <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start">
+                <ExclamationTriangleIcon className="h-4 w-4 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-700">{submitError}</p>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Bank Selection */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Informasi Bank</h4>
-                
-                <Select
-                  options={banks.map(bank => ({
-                    value: bank.id.toString(),
-                    label: `${bank.fullName} (${bank.code})`
-                  }))}
-                  label="Institusi Bank"
-                  value={watchAccount('bankId')?.toString() || ''}
-                  onChange={(value) => setValueAccount('bankId', parseInt(value as string) || 0)}
-                  error={accountErrors.bankId?.message}
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                options={banks.map(bank => ({
+                  value: bank.id.toString(),
+                  label: `${bank.name} (${bank.code})`
+                }))}
+                label="Bank"
+                value={watchAccount('bankId')?.toString() || ''}
+                onChange={(value) => setValueAccount('bankId', parseInt(value as string) || 0)}
+                error={accountErrors.bankId?.message}
+              />
 
-                <Input
-                  label="Nomor Rekening"
-                  {...registerAccount('accountNumber', { 
-                    required: 'Nomor rekening wajib diisi',
-                    pattern: {
-                      value: /^[0-9]{10,20}$/,
-                      message: 'Masukkan nomor rekening yang valid (10-20 digit)'
-                    }
-                  })}
-                  error={accountErrors.accountNumber?.message}
-                  placeholder="contoh: 1234567890123456"
-                />
+              <Input
+                label="Nomor Rekening"
+                {...registerAccount('accountNumber', {
+                  required: 'Nomor rekening wajib diisi',
+                  pattern: {
+                    value: /^[0-9]{10,20}$/,
+                    message: 'Masukkan nomor rekening yang valid'
+                  }
+                })}
+                error={accountErrors.accountNumber?.message}
+                placeholder="1234567890123456"
+              />
 
-                <Input
-                  label="ID Perusahaan"
-                  {...registerAccount('companyId', { required: 'ID Perusahaan wajib diisi' })}
-                  error={accountErrors.companyId?.message}
-                  placeholder="Masukkan identifikasi perusahaan"
-                />
-              </div>
+              <Input
+                label="ID Perusahaan"
+                {...registerAccount('companyId', { required: 'ID Perusahaan wajib diisi' })}
+                error={accountErrors.companyId?.message}
+                placeholder="ID Perusahaan"
+              />
 
-              {/* Credentials */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Kredensial BSI</h4>
-                
-                <Input
-                  label="Nama Pengguna"
-                  {...registerAccount('username', { required: 'Nama pengguna wajib diisi' })}
-                  error={accountErrors.username?.message}
-                  placeholder="Nama pengguna BSI"
-                />
+              <Input
+                label="Username"
+                {...registerAccount('username', { required: 'Username wajib diisi' })}
+                error={accountErrors.username?.message}
+                placeholder="Username BSI"
+              />
 
-                <Input
-                  label="Kata Sandi"
-                  type="password"
-                  {...registerAccount('password', { 
-                    required: 'Kata sandi wajib diisi',
-                    minLength: {
-                      value: 6,
-                      message: 'Kata sandi minimal 6 karakter'
-                    }
-                  })}
-                  error={accountErrors.password?.message}
-                  placeholder="Kata sandi BSI"
-                />
-
-                {/* Security Note */}
-                <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3">
-                  <div className="flex">
-                    <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-yellow-400">Pemberitahuan Keamanan</p>
-                      <p className="text-xs text-yellow-300 mt-1">
-                        Kredensial dienkripsi dan disimpan dengan aman. Hanya personel yang berwenang yang dapat mengakses informasi ini.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Input
+                label="Password"
+                type="password"
+                {...registerAccount('password', {
+                  required: 'Password wajib diisi',
+                  minLength: {
+                    value: 6,
+                    message: 'Password minimal 6 karakter'
+                  }
+                })}
+                error={accountErrors.password?.message}
+                placeholder="Password BSI"
+              />
             </div>
 
-            {/* Additional Settings */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium text-slate-300 border-b border-slate-600 pb-2">Pengaturan Sinkronisasi</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      {...registerAccount('autoSync')}
-                      className="rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
-                      defaultChecked
-                    />
-                    <span className="ml-2 text-sm text-white">Aktifkan sinkronisasi otomatis</span>
-                  </label>
-                  <p className="text-xs text-slate-400 ml-6">Ambil transaksi baru secara otomatis setiap hari</p>
-                </div>
+            {/* Compact Settings */}
+            <div className="bg-slate-50 rounded-md p-3 space-y-2">
+              <label className="flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  {...registerAccount('autoSync')}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2"
+                  defaultChecked
+                />
+                <span className="text-slate-700">Aktifkan sinkronisasi otomatis</span>
+              </label>
 
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      {...registerAccount('autoSync')}
-                      className="rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500"
-                      defaultChecked
-                    />
-                    <span className="ml-2 text-sm text-white">Akun aktif</span>
-                  </label>
-                  <p className="text-xs text-slate-400 ml-6">Akun aktif dan siap digunakan</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Information Panel */}
-            <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
-              <div className="flex">
-                <InformationCircleIcon className="h-5 w-5 text-blue-400 mr-3 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-medium text-blue-300 mb-2">Apa yang terjadi selanjutnya?</h4>
-                  <ul className="text-xs text-blue-200 space-y-1">
-                    <li>• Kredensial akun akan diverifikasi dengan BSI</li>
-                    <li>• Sinkronisasi transaksi awal akan dilakukan</li>
-                    <li>• Sinkronisasi harian otomatis akan dijadwalkan</li>
-                    <li>• Anda dapat memantau status sinkronisasi dari halaman akun</li>
-                  </ul>
-                </div>
-              </div>
+              <label className="flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  {...registerAccount('isActive')}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2"
+                  defaultChecked
+                />
+                <span className="text-slate-700">Akun aktif</span>
+              </label>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-4 border-t border-slate-600">
-              <div className="text-xs text-slate-400">
-                Semua kredensial dienkripsi dan disimpan dengan aman
-              </div>
-              <div className="flex space-x-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsAccountModalOpen(false)
-                    resetAccount()
-                  }}
-                >
-                  Batal
-                </Button>
-                <Button 
-                  type="submit" 
-                  loading={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                   <PlusIcon className="h-4 w-4 mr-2" />
-                   Tambah Akun
-                </Button>
-              </div>
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsAccountModalOpen(false)
+                  resetAccount()
+                }}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                loading={isSubmitting}
+              >
+                <PlusIcon className="h-4 w-4 mr-1" />
+                Tambah Akun
+              </Button>
             </div>
           </form>
         </Modal>
 
-        {/* Cron Management Modal */}
+        {/* Compact Cron Settings Modal */}
         <Modal
           isOpen={isCronModalOpen}
           onClose={() => setIsCronModalOpen(false)}
-          title={`Cron Settings - ${selectedAccountForCron?.accountNumber}`}
-          size="lg"
+          title="Jadwal Sinkronisasi"
+          size="md"
         >
-          <form onSubmit={handleCronSubmit(onSubmitCron)} className="space-y-6">
+          <form onSubmit={handleCronSubmit(onSubmitCron)} className="space-y-4">
+            {/* Account Info */}
+            <div className="bg-slate-50 rounded-md p-3">
+              <div className="text-xs text-slate-500">Akun</div>
+              <div className="text-sm font-medium text-slate-900">{selectedAccountForCron?.accountNumber}</div>
+            </div>
+
+            {/* Error Display */}
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-start">
+                <ExclamationTriangleIcon className="h-4 w-4 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-700">{submitError}</p>
+              </div>
+            )}
+
             {/* Enable/Disable */}
-            <div className="flex items-center space-x-3">
+            <label className="flex items-center text-sm">
               <input
                 type="checkbox"
                 id="isActive"
                 {...registerCron('isActive')}
-                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2"
               />
-              <label htmlFor="isActive" className="text-sm font-medium text-white">
-                Enable Automatic Sync
-              </label>
-            </div>
+              <span className="font-medium text-slate-900">Aktifkan Sinkronisasi Otomatis</span>
+            </label>
 
             {watchCron('isActive') && (
               <>
-                {/* Cron Expression */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <Select
-                  label="Sync Frequency"
-                  value={watchCron('cronExpression') || ''}
-                  onChange={(value) => setCronValue('cronExpression', value as string)}
-                  options={[
-                    { value: '0 */1 * * *', label: 'Every Hour' },
-                    { value: '0 */2 * * *', label: 'Every 2 Hours' },
-                    { value: '0 */3 * * *', label: 'Every 3 Hours' },
-                    { value: '0 */6 * * *', label: 'Every 6 Hours' },
-                    { value: '0 */12 * * *', label: 'Every 12 Hours' },
-                    { value: '0 0 * * *', label: 'Daily at Midnight' },
-                    { value: '0 9 * * *', label: 'Daily at 9 AM' }
-                  ]}
-                  error={cronErrors.cronExpression?.message}
-                />
+                    label="Frekuensi"
+                    value={watchCron('cronExpression') || ''}
+                    onChange={(value) => setCronValue('cronExpression', value as string)}
+                    options={[
+                      { value: '*/2 * * * *', label: 'Setiap 2 Menit' },
+                      { value: '*/5 * * * *', label: 'Setiap 5 Menit' },
+                      { value: '*/10 * * * *', label: 'Setiap 10 Menit' },
+                      { value: '*/15 * * * *', label: 'Setiap 15 Menit' },
+                      { value: '*/20 * * * *', label: 'Setiap 20 Menit' },
+                      { value: '*/30 * * * *', label: 'Setiap 30 Menit' },
+                      { value: '0 */1 * * *', label: 'Setiap Jam' },
+                      { value: '0 */2 * * *', label: 'Setiap 2 Jam' },
+                      { value: '0 */3 * * *', label: 'Setiap 3 Jam' },
+                      { value: '0 */6 * * *', label: 'Setiap 6 Jam' },
+                      { value: '0 */12 * * *', label: 'Setiap 12 Jam' },
+                      { value: '0 0 * * *', label: 'Harian (Tengah Malam)' },
+                      { value: '0 9 * * *', label: 'Harian (09:00)' }
+                    ]}
+                    error={cronErrors.cronExpression?.message}
+                  />
 
                   <Select
-                    label="Browser Type"
+                    label="Browser"
                     value={watchCron('browserType') || ''}
                     onChange={(value) => setCronValue('browserType', value as 'chrome' | 'firefox')}
                     options={[
@@ -724,87 +640,122 @@ export default function AccountsPage() {
                     ]}
                     error={cronErrors.browserType?.message}
                   />
-                </div>
 
-                {/* Time Range */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Start Time"
+                    label="Waktu Mulai"
                     type="time"
                     {...registerCron('startTime')}
                     error={cronErrors.startTime?.message}
                   />
 
                   <Input
-                    label="End Time"
+                    label="Waktu Selesai"
                     type="time"
                     {...registerCron('endTime')}
                     error={cronErrors.endTime?.message}
                   />
+
+                  <div className="col-span-2">
+                    <Input
+                      label="Max Percobaan Ulang"
+                      type="number"
+                      min="1"
+                      max="10"
+                      {...registerCron('maxRetries', {
+                        required: 'Max retries wajib diisi',
+                        valueAsNumber: true,
+                        min: { value: 1, message: 'Minimum 1' },
+                        max: { value: 10, message: 'Maximum 10' }
+                      })}
+                      error={cronErrors.maxRetries?.message}
+                    />
+                  </div>
+                </div>
+
+                {/* Lookback Days Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-900">
+                    Lookback Days (Hari ke Belakang)
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[1, 2, 3, 5, 7, 10, 14, 21, 30].map((days) => (
+                      <Button
+                        key={days}
+                        type="button"
+                        variant={watchCron('lookbackDays') === days ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCronValue('lookbackDays', days)}
+                        className="text-xs h-8"
+                      >
+                        {days} {days === 1 ? 'Hari' : 'Hari'}
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Pilih berapa hari transaksi ke belakang yang akan disinkronisasi (max 30 hari)
+                  </p>
                 </div>
 
                 {/* Days of Week */}
                 <div>
-                  <label className="text-sm font-medium text-white mb-3 block">
-                    Active Days
+                  <label className="text-sm font-medium text-slate-900 mb-2 block">
+                    Hari Aktif
                   </label>
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {[
-                      { value: 1, label: 'Mon' },
-                      { value: 2, label: 'Tue' },
-                      { value: 3, label: 'Wed' },
-                      { value: 4, label: 'Thu' },
-                      { value: 5, label: 'Fri' },
-                      { value: 6, label: 'Sat' },
-                      { value: 0, label: 'Sun' }
-                    ].map(day => (
-                      <label key={day.value} className="flex flex-col items-center p-2 border border-slate-600 rounded-md cursor-pointer hover:bg-slate-800">
-                        <input
-                          type="checkbox"
-                          value={day.value}
-                          {...registerCron('daysOfWeek')}
-                          className="mb-1"
-                        />
-                        <span className="text-xs text-slate-300">{day.label}</span>
-                      </label>
-                    ))}
+                      { value: 1, label: 'Sen' },
+                      { value: 2, label: 'Sel' },
+                      { value: 3, label: 'Rab' },
+                      { value: 4, label: 'Kam' },
+                      { value: 5, label: 'Jum' },
+                      { value: 6, label: 'Sab' },
+                      { value: 0, label: 'Min' }
+                    ].map(day => {
+                      const currentDays = watchCron('daysOfWeek') || []
+                      const isChecked = currentDays.includes(day.value)
+
+                      return (
+                        <label key={day.value} className="flex flex-col items-center p-1.5 border border-slate-200 rounded cursor-pointer hover:bg-slate-50 text-center">
+                          <input
+                            type="checkbox"
+                            value={day.value}
+                            checked={isChecked}
+                            onChange={(e) => {
+                              const days = watchCron('daysOfWeek') || []
+                              if (e.target.checked) {
+                                setCronValue('daysOfWeek', [...days, day.value])
+                              } else {
+                                setCronValue('daysOfWeek', days.filter(d => d !== day.value))
+                              }
+                            }}
+                            className="mb-0.5 scale-75"
+                          />
+                          <span className="text-xs text-slate-700">{day.label}</span>
+                        </label>
+                      )
+                    })}
                   </div>
                 </div>
 
-                {/* Max Retries */}
-                <Input
-                  label="Max Retries"
-                  type="number"
-                  min="1"
-                  max="10"
-                  {...registerCron('maxRetries', { 
-                    required: 'Max retries is required',
-                    valueAsNumber: true,
-                    min: { value: 1, message: 'Minimum 1 retry' },
-                    max: { value: 10, message: 'Maximum 10 retries' }
-                  })}
-                  error={cronErrors.maxRetries?.message}
-                />
-
-                {/* Info Box */}
-                <div className="text-sm text-slate-300 bg-slate-800 p-4 rounded-md border border-slate-600">
-                  <h4 className="font-medium text-blue-400 mb-2">Cron Schedule Info:</h4>
-                  <p className="mb-2">The system will automatically sync this account based on the schedule you set.</p>
-                  <p><strong>Current Expression:</strong> <code className="bg-slate-700 px-2 py-1 rounded">{watchCron('cronExpression')}</code></p>
+                {/* Info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-2 text-xs text-blue-800">
+                  <strong>Cron:</strong> <code className="bg-blue-100 px-1.5 py-0.5 rounded">{watchCron('cronExpression')}</code>
                 </div>
               </>
             )}
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => setIsCronModalOpen(false)}
               >
-                Cancel
+                Batal
               </Button>
-              <Button type="submit" loading={isSubmitting}>
-                Save Settings
+              <Button type="submit" size="sm" loading={isSubmitting}>
+                <CogIcon className="h-4 w-4 mr-1" />
+                Simpan
               </Button>
             </div>
           </form>

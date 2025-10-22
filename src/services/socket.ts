@@ -36,47 +36,54 @@ class SocketService {
   private connected = false
   private simulatedEvents: unknown = null
 
-  connect(token?: string): Promise<Socket> | void {
-    // For demo purposes, simulate connection without real Socket.IO
-    if (!token) {
-      this.connected = true
-      console.log('🔌 Connected to Socket.IO (simulated)')
-      return
-    }
+  connect(token?: string): Promise<Socket> {
     return new Promise((resolve, reject) => {
       if (this.socket?.connected) {
+        console.log('🔌 Already connected to Socket.IO:', this.socket?.id)
         resolve(this.socket)
         return
       }
 
-      this.socket = io(this.baseURL, {
-        auth: { token },
+      console.log('🔌 Connecting to Socket.IO at:', this.baseURL)
+
+      const socketOptions: any = {
         autoConnect: true,
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
         timeout: 20000,
-      })
+        transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+      }
+
+      // Add token to auth if provided
+      if (token) {
+        socketOptions.auth = { token }
+      }
+
+      this.socket = io(this.baseURL, socketOptions)
 
       this.socket.on('connect', () => {
-        console.log('🔌 Connected to Socket.IO:', this.socket?.id)
+        console.log('✅ Socket.IO Connected! ID:', this.socket?.id)
+        this.connected = true
         this.reconnectAttempts = 0
         this.handlers.onConnect?.()
         resolve(this.socket!)
       })
 
       this.socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error)
+        console.error('❌ Socket connection error:', error.message)
         this.reconnectAttempts++
-        
+
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+          console.error('❌ Max reconnection attempts reached')
           reject(new Error('Failed to connect to Socket.IO server after multiple attempts'))
         }
       })
 
       this.socket.on('disconnect', (reason) => {
-        console.log('Socket disconnected:', reason)
+        console.log('🔌 Socket disconnected:', reason)
+        this.connected = false
         this.handlers.onDisconnect?.()
       })
 

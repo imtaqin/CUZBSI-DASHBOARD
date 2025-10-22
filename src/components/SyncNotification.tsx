@@ -56,14 +56,18 @@ export function SyncNotification({ isOpen, onClose, syncType, accountName }: Syn
       setPreviewEnabled(true)
       setScreenshotCount(0)
       
-      // Connect to Socket.IO for real-time logs with auth token
-      const token = localStorage.getItem('token') || ''
-      try {
-        socketService.connect(token)
-      } catch (error) {
-        console.log('Failed to connect to Socket.IO, falling back to simulation')
-        socketService.connect() // fallback to simulation mode
-      }
+      // Connect to Socket.IO for real-time logs
+      const token = localStorage.getItem('accessToken') || ''
+      console.log('🔌 Initializing Socket.IO connection...')
+
+      socketService.connect(token)
+        .then(() => {
+          console.log('✅ Socket.IO connected successfully')
+        })
+        .catch((error) => {
+          console.error('❌ Failed to connect to Socket.IO:', error)
+          addLog('warning', 'Could not connect to real-time updates. Sync will still work but logs may be delayed.')
+        })
       
       // Listen for sync events (using the actual backend event names)
       socketService.on('sync_started', handleSyncStarted)
@@ -259,170 +263,157 @@ export function SyncNotification({ isOpen, onClose, syncType, accountName }: Syn
   return (
     <Modal
       isOpen={isOpen}
-      onClose={currentStatus === 'syncing' ? () => {} : onClose} // Prevent closing during sync
+      onClose={currentStatus === 'syncing' ? () => {} : onClose}
       title="Sync Progress"
       size="lg"
     >
-      <div className="space-y-6">
-        {/* Header Status */}
-        <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
+      <div className="space-y-4">
+        {/* Compact Header Status */}
+        <div className="bg-slate-50 rounded-md p-3 border border-slate-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
               {getStatusIcon()}
-              <div className="ml-3">
-                <h3 className={`text-lg font-medium ${getStatusColor()}`}>
-                  {currentStatus === 'starting' && 'Starting Sync...'}
-                  {currentStatus === 'syncing' && 'Syncing in Progress...'}
-                  {currentStatus === 'completed' && 'Sync Completed Successfully'}
-                  {currentStatus === 'error' && 'Sync Failed'}
+              <div>
+                <h3 className={`text-sm font-medium ${getStatusColor()}`}>
+                  {currentStatus === 'starting' && 'Starting...'}
+                  {currentStatus === 'syncing' && 'Syncing...'}
+                  {currentStatus === 'completed' && 'Completed'}
+                  {currentStatus === 'error' && 'Failed'}
                 </h3>
-                <p className="text-sm text-slate-400">
+                <p className="text-xs text-slate-500">
                   {syncType === 'all' ? 'All Accounts' : accountName}
                 </p>
               </div>
             </div>
-            
+
             {currentStatus !== 'syncing' && (
-              <button
-                onClick={onClose}
-                className="text-slate-400 hover:text-white"
-              >
-                <XMarkIcon className="h-6 w-6" />
+              <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+                <XMarkIcon className="h-5 w-5" />
               </button>
             )}
           </div>
 
-          {/* Progress Bar */}
+          {/* Compact Progress Bar */}
           {isActive && (
-            <div className="mb-4">
-              <div className="flex justify-between text-sm text-slate-400 mb-2">
+            <div className="mb-3">
+              <div className="flex justify-between text-xs text-slate-500 mb-1">
                 <span>Progress</span>
                 <span>{Math.round(progress)}%</span>
               </div>
-              <div className="w-full bg-slate-700 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+              <div className="w-full bg-slate-200 rounded-full h-1.5">
+                <div
+                  className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
           )}
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">{stats.completedAccounts}</div>
-              <div className="text-xs text-slate-400">Accounts</div>
+          {/* Compact Stats */}
+          <div className="grid grid-cols-4 gap-3 text-center">
+            <div>
+              <div className="text-lg font-bold text-slate-900">{stats.completedAccounts}</div>
+              <div className="text-xs text-slate-500">Accounts</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">{stats.newTransactions}</div>
-              <div className="text-xs text-slate-400">New Transactions</div>
+            <div>
+              <div className="text-lg font-bold text-green-600">{stats.newTransactions}</div>
+              <div className="text-xs text-slate-500">Transactions</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">{stats.errors}</div>
-              <div className="text-xs text-slate-400">Errors</div>
+            <div>
+              <div className="text-lg font-bold text-red-600">{stats.errors}</div>
+              <div className="text-xs text-slate-500">Errors</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-400">{logs.length}</div>
-              <div className="text-xs text-slate-400">Log Entries</div>
+            <div>
+              <div className="text-lg font-bold text-blue-600">{logs.length}</div>
+              <div className="text-xs text-slate-500">Logs</div>
             </div>
-          
           </div>
         </div>
 
-        {/* Real-time Screenshot Preview */}
+        {/* Compact Screenshot Preview */}
         {(previewEnabled || previewImage) && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-slate-300 flex items-center">
-                <CameraIcon className="h-4 w-4 mr-2 text-green-400" />
-                Live Automation Preview
+              <h4 className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                <CameraIcon className="h-4 w-4 text-green-600" />
+                Live Preview
               </h4>
-              <div className="flex items-center text-xs text-slate-400">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                Live • {screenshotCount} captures
+              <div className="flex items-center text-xs text-slate-500">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></div>
+                {screenshotCount} captures
               </div>
             </div>
-            
-            <div className="bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
-              <div className="relative min-h-48 flex items-center justify-center">
+
+            <div className="bg-slate-900 rounded-md border border-slate-200 overflow-hidden">
+              <div className="relative min-h-40 flex items-center justify-center bg-slate-100">
                 {previewImage ? (
                   <img
                     src={`data:image/png;base64,${previewImage}`}
-                    alt="Real-time automation preview"
-                    className="w-full h-auto max-h-64 object-contain"
+                    alt="Live preview"
+                    className="w-full h-auto max-h-56 object-contain"
                   />
                 ) : (
-                  <div className="text-center text-slate-400">
-                    <CameraIcon className="h-12 w-12 mx-auto mb-2" />
-                    <p>Waiting for screenshots...</p>
-                    <p className="text-xs">Preview will appear when automation starts</p>
+                  <div className="text-center text-slate-400 py-8">
+                    <CameraIcon className="h-10 w-10 mx-auto mb-2 text-slate-300" />
+                    <p className="text-sm">Waiting for screenshots...</p>
                   </div>
                 )}
-                <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                  📸 {previewImage ? 'Live Preview' : 'Waiting...'}
+                <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded text-xs">
+                  {previewImage ? '📸 Live' : 'Waiting...'}
                 </div>
                 {!isActive && previewImage && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <div className="bg-slate-800 px-3 py-2 rounded-lg border border-slate-600">
-                      <span className="text-sm text-slate-300">Preview Stopped</span>
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="bg-white px-3 py-1.5 rounded-md shadow-lg">
+                      <span className="text-xs text-slate-700 font-medium">Preview Stopped</span>
                     </div>
                   </div>
                 )}
               </div>
-              <div className="p-3 bg-slate-800 border-t border-slate-700">
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>Capturing every 0.5 seconds</span>
-                  <span>Total: {screenshotCount} screenshots</span>
+              <div className="px-3 py-2 bg-slate-50 border-t border-slate-200">
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                  <span>Updates every 0.5s</span>
+                  <span>{screenshotCount} total</span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Real-time Logs */}
-        <div className="space-y-3">
+        {/* Compact Logs */}
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-slate-300">Real-time Logs</h4>
-            <button
-              onClick={() => setLogs([])}
-              className="text-xs text-slate-400 hover:text-white"
-            >
-              Clear Logs
-            </button>
+            <h4 className="text-sm font-medium text-slate-700">Activity Logs</h4>
+            {logs.length > 0 && (
+              <button
+                onClick={() => setLogs([])}
+                className="text-xs text-slate-500 hover:text-slate-700"
+              >
+                Clear
+              </button>
+            )}
           </div>
-          
-          <div className="bg-slate-900 rounded-lg border border-slate-700 max-h-64 overflow-y-auto">
+
+          <div className="bg-white rounded-md border border-slate-200 max-h-56 overflow-y-auto">
             {logs.length === 0 ? (
-              <div className="p-4 text-center text-slate-500">
-                <ClockIcon className="h-8 w-8 mx-auto mb-2" />
-                <p>Waiting for sync logs...</p>
+              <div className="p-6 text-center text-slate-400">
+                <ClockIcon className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                <p className="text-sm">Waiting for logs...</p>
               </div>
             ) : (
-              <div className="p-3 space-y-2">
+              <div className="p-2 space-y-1">
                 {logs.map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-start space-x-3 py-2 px-3 rounded hover:bg-slate-800 transition-colors"
+                    className="flex items-start gap-2 py-1.5 px-2 rounded hover:bg-slate-50"
                   >
                     {getLogIcon(log.level)}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-white">{log.message}</p>
-                        <span className="text-xs text-slate-500">{log.timestamp}</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs text-slate-900 line-clamp-2">{log.message}</p>
+                        <span className="text-xs text-slate-400 whitespace-nowrap">{log.timestamp}</span>
                       </div>
                       {log.account && (
-                        <p className="text-xs text-slate-400 mt-1">Account: {log.account}</p>
-                      )}
-                      {log.progress !== undefined && (
-                        <div className="mt-2">
-                          <div className="w-full bg-slate-700 rounded-full h-1">
-                            <div 
-                              className="bg-blue-500 h-1 rounded-full transition-all"
-                              style={{ width: `${log.progress}%` }}
-                            />
-                          </div>
-                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">{log.account}</p>
                       )}
                     </div>
                   </div>
@@ -432,28 +423,20 @@ export function SyncNotification({ isOpen, onClose, syncType, accountName }: Syn
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-slate-600">
+        {/* Compact Action Buttons */}
+        <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
           {currentStatus === 'syncing' ? (
-            <div className="flex items-center text-sm text-slate-400">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
-              Sync in progress... Please wait
+            <div className="flex items-center text-sm text-slate-500">
+              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-blue-600 mr-2"></div>
+              Syncing...
             </div>
           ) : (
-            <>
-              <button
-                onClick={() => setLogs([])}
-                className="px-4 py-2 text-sm bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
-              >
-                Clear Logs
-              </button>
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
-                {currentStatus === 'completed' ? 'Done' : 'Close'}
-              </button>
-            </>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              {currentStatus === 'completed' ? 'Done' : 'Close'}
+            </button>
           )}
         </div>
       </div>

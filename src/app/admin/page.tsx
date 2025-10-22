@@ -2,36 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { AdminLayout } from '@/components/layout'
-import { Card, CardContent, CardHeader, CardTitle, LoadingPage } from '@/components/ui'
+import { LoadingPage } from '@/components/ui'
 import { formatCurrency } from '@/lib/utils'
 import { apiService } from '@/services/api'
 import type { DashboardData } from '@/types'
 import {
-  UsersIcon,
   BuildingLibraryIcon,
   CreditCardIcon,
   FlagIcon,
-  ArrowTrendingUpIcon,
-  CalendarDaysIcon,
   BanknotesIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts'
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8']
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -45,7 +26,9 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true)
+      setError('')
       const response = await apiService.getDashboard()
+
       if (response.success) {
         setData(response.data)
       } else {
@@ -72,10 +55,10 @@ export default function DashboardPage() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <ExclamationTriangleIcon className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <p className="text-red-400 mb-4">{error}</p>
+            <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={fetchDashboardData}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="btn-primary"
             >
               Try Again
             </button>
@@ -89,321 +72,162 @@ export default function DashboardPage() {
 
   const { stats, chartData, recentTransactions } = data
 
-  // Prepare chart data
-  const transactionTrendData = chartData.transactionDates.map((date, index) => ({
-    date,
-    transactions: chartData.transactionCounts[index]
-  }))
-
-  const balanceData = chartData.balanceLabels.map((label, index) => ({
-    name: label,
-    balance: chartData.balanceData[index]
-  }))
-
   return (
-    <AdminLayout 
-      title="Dasbor" 
-      description="Ringkasan sistem manajemen transaksi BSI Anda"
+    <AdminLayout
+      title="Dashboard"
+      description="Overview of your transaction management system"
     >
-      <div className="space-y-4 lg:space-y-6">
+      <div className="space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <BuildingLibraryIcon className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" />
-                </div>
-                <div className="ml-3 lg:ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-xs lg:text-sm font-medium text-slate-400 truncate">
-                      Total Akun
-                    </dt>
-                    <dd className="text-xl lg:text-3xl font-bold text-white">
-                      {stats.totalAccounts}
-                    </dd>
-                  </dl>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="stat-card">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <BuildingLibraryIcon className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
-              <div className="mt-2">
-                <div className="flex items-center text-xs lg:text-sm">
-                  <span className="text-green-600 font-medium">
-                    {stats.activeAccounts} aktif
-                  </span>
-                </div>
+              <div className="ml-4">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Total Accounts
+                </p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.totalAccounts}</p>
+                <p className="text-xs text-emerald-600 mt-0.5 font-medium">{stats.activeAccounts} active</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CreditCardIcon className="h-6 w-6 lg:h-8 lg:w-8 text-green-600" />
-                </div>
-                <div className="ml-3 lg:ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-xs lg:text-sm font-medium text-slate-400 truncate">
-                      Total Transaksi
-                    </dt>
-                    <dd className="text-xl lg:text-3xl font-bold text-white">
-                      {stats.totalTransactions.toLocaleString()}
-                    </dd>
-                  </dl>
+          <div className="stat-card">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="h-12 w-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <CreditCardIcon className="h-6 w-6 text-emerald-600" />
                 </div>
               </div>
-              <div className="mt-2">
-                <div className="flex items-center text-xs lg:text-sm">
-                  <CalendarDaysIcon className="h-3 w-3 lg:h-4 lg:w-4 text-blue-500 mr-1" />
-                  <span className="text-blue-600 font-medium">
-                    {stats.todayTransactions} hari ini
-                  </span>
-                </div>
+              <div className="ml-4">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Transactions
+                </p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.totalTransactions.toLocaleString()}</p>
+                <p className="text-xs text-blue-600 mt-0.5 font-medium">{stats.todayTransactions} today</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <BanknotesIcon className="h-6 w-6 lg:h-8 lg:w-8 text-yellow-600" />
-                </div>
-                <div className="ml-3 lg:ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-xs lg:text-sm font-medium text-slate-400 truncate">
-                      Total Saldo
-                    </dt>
-                    <dd className="text-lg lg:text-2xl font-bold text-white">
-                      {formatCurrency(stats.totalBalance)}
-                    </dd>
-                  </dl>
+          <div className="stat-card">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="h-12 w-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <BanknotesIcon className="h-6 w-6 text-amber-600" />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="ml-4">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Total Balance
+                </p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(stats.totalBalance)}</p>
+              </div>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FlagIcon className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600" />
-                </div>
-                <div className="ml-3 lg:ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-xs lg:text-sm font-medium text-slate-400 truncate">
-                      Transaksi Ditandai
-                    </dt>
-                    <dd className="text-xl lg:text-3xl font-bold text-white">
-                      {stats.flaggedTransactions}
-                    </dd>
-                  </dl>
+          <div className="stat-card">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="h-12 w-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <FlagIcon className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
-              <div className="mt-2">
-                <div className="flex items-center text-xs lg:text-sm">
-                  <span className="text-purple-600 font-medium">
-                    {stats.newFlags} baru
-                  </span>
-                </div>
+              <div className="ml-4">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Flagged
+                </p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.flaggedTransactions}</p>
+                <p className="text-xs text-purple-600 mt-0.5 font-medium">
+                  {stats.newFlags || 0} new
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-          {/* Transaction Trend */}
-          <Card>
-            <CardHeader className="pb-3 lg:pb-6">
-              <CardTitle className="flex items-center text-sm lg:text-base">
-                <ArrowTrendingUpIcon className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600 mr-2" />
-                Tren Transaksi (7 Hari Terakhir)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="h-64 lg:h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={transactionTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{ fontSize: 12 }}
-                      stroke="#9CA3AF"
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12 }}
-                      stroke="#9CA3AF"
-                    />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: '#1F2937',
-                        border: '1px solid #374151',
-                        borderRadius: '6px',
-                        color: '#F9FAFB'
-                      }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="transactions" 
-                      stroke="#3b82f6" 
-                      strokeWidth={2}
-                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Account Balances */}
-          <Card>
-            <CardHeader className="pb-3 lg:pb-6">
-              <CardTitle className="flex items-center text-sm lg:text-base">
-                <BanknotesIcon className="h-4 w-4 lg:h-5 lg:w-5 text-green-600 mr-2" />
-                Saldo Akun
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="h-64 lg:h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={balanceData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={{ fontSize: 12 }}
-                      stroke="#9CA3AF"
-                    />
-                    <YAxis 
-                      tickFormatter={(value) => formatCurrency(value)}
-                      tick={{ fontSize: 12 }}
-                      stroke="#9CA3AF"
-                    />
-                    <Tooltip 
-                      formatter={(value) => [formatCurrency(Number(value)), 'Balance']}
-                      contentStyle={{
-                        backgroundColor: '#1F2937',
-                        border: '1px solid #374151',
-                        borderRadius: '6px',
-                        color: '#F9FAFB'
-                      }}
-                    />
-                    <Bar dataKey="balance" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Transactions */}
-        <Card>
-          <CardHeader className="pb-3 lg:pb-6">
-            <CardTitle className="flex items-center text-sm lg:text-base">
-              Transaksi Terbaru
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {recentTransactions.length === 0 ? (
-              <div className="text-center py-6 text-slate-400">
-                Tidak ada transaksi terbaru
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-600">
-                  <thead className="bg-slate-800">
-                    <tr>
-                      <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        Tanggal
-                      </th>
-                      <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider hidden sm:table-cell">
-                        Akun
-                      </th>
-                      <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        Deskripsi
-                      </th>
-                      <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider hidden md:table-cell">
-                        Tipe
-                      </th>
-                      <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                        Jumlah
-                      </th>
-                      <th className="px-3 lg:px-6 py-2 lg:py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider hidden lg:table-cell">
-                        Penanda
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-slate-700 divide-y divide-slate-600">
-                    {recentTransactions.map((transaction) => (
-                      <tr key={transaction.id} className="hover:bg-slate-600">
-                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-slate-200">
-                          <div className="flex flex-col">
-                            <span>{new Date(transaction.tanggal).toLocaleDateString()}</span>
-                            <span className="text-xs text-slate-400 sm:hidden">
-                              {transaction.Account.accountNumber}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-slate-200 hidden sm:table-cell">
-                          {transaction.Account.accountNumber}
-                        </td>
-                        <td className="px-3 lg:px-6 py-3 lg:py-4 text-xs lg:text-sm text-slate-200">
-                          <div className="max-w-xs truncate" title={transaction.description}>
-                            {transaction.description}
-                          </div>
-                          <div className="md:hidden mt-1">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              transaction.type === 'Kredit' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {transaction.type}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm hidden md:table-cell">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            transaction.type === 'Kredit' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {transaction.type}
+        {/* Recent Transactions Table */}
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-slate-900">
+              Recent Transactions
+            </h3>
+            <p className="text-sm text-slate-500 mt-0.5">Latest transaction activity</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="table-compact">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Account</th>
+                  <th>Description</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Flag</th>
+                </tr>
+              </thead>
+              <tbody>
+                {!recentTransactions || recentTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-gray-500">
+                      No recent transactions found
+                    </td>
+                  </tr>
+                ) : (
+                  recentTransactions.map((transaction) => (
+                    <tr key={transaction.id}>
+                      <td>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-900">
+                            {new Date(transaction.tanggal).toLocaleDateString()}
                           </span>
-                        </td>
-                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm font-medium">
-                          <div className="flex flex-col items-end">
-                            <span className={transaction.type === 'Kredit' ? 'text-green-400' : 'text-red-400'}>
-                              {formatCurrency(transaction.Amount)}
-                            </span>
-                            <div className="lg:hidden mt-1">
-                              {transaction.flag ? (
-                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-600 text-blue-100">
-                                  {transaction.flag}
-                                </span>
-                              ) : (
-                                <span className="text-slate-400 text-xs">Tidak ada</span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-3 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm hidden lg:table-cell">
-                          {transaction.flag ? (
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-600 text-blue-100">
-                              {transaction.flag}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 text-xs">Tidak ada penanda</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          <span className="text-xs text-slate-500">
+                            {transaction.Account?.accountNumber || 'N/A'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="text-sm text-slate-700">
+                        {transaction.Account?.accountNumber || 'N/A'}
+                      </td>
+                      <td>
+                        <div className="max-w-xs truncate text-sm text-slate-700" title={transaction.description}>
+                          {transaction.description}
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge ${
+                          transaction.type === 'Kredit'
+                            ? 'badge-success'
+                            : 'badge-danger'
+                        }`}>
+                          {transaction.type}
+                        </span>
+                      </td>
+                      <td className={`font-semibold text-sm ${
+                        transaction.type === 'Kredit' ? 'text-emerald-600' : 'text-red-600'
+                      }`}>
+                        {formatCurrency(transaction.Amount)}
+                      </td>
+                      <td>
+                        {transaction.flag ? (
+                          <span className="badge badge-primary">
+                            {transaction.flag}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">None</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </AdminLayout>
   )

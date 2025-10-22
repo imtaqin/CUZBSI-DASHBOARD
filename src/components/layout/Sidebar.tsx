@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
@@ -19,7 +20,13 @@ import {
   XMarkIcon,
   ShieldCheckIcon,
   ShieldExclamationIcon,
-  FlagIcon
+  FlagIcon,
+  LinkIcon,
+  ClockIcon,
+  BellIcon,
+  BanknotesIcon,
+  TableCellsIcon,
+  KeyIcon
 } from '@heroicons/react/24/outline'
 
 interface SidebarItem {
@@ -37,37 +44,75 @@ const sidebarItems: SidebarItem[] = [
     icon: HomeIcon,
   },
   {
-    name: 'Manajemen Pengguna',
+    name: 'Bank',
+    href: '/admin/banks',
+    icon: BuildingLibraryIcon,
+    permission: 'banks.manage'
+  },
+  {
+    name: 'Akun',
+    href: '/admin/accounts',
+    icon: CreditCardIcon,
+  },
+  {
+    name: 'Transaksi',
+    href: '/admin/transactions',
+    icon: ClipboardDocumentListIcon,
+  },
+  {
+    name: 'Penanda',
+    href: '/admin/flags',
+    icon: FlagIcon,
+  },
+  {
+    name: 'Riwayat Penanda',
+    href: '/admin/flag-mappings',
+    icon: LinkIcon,
+  },
+  {
+    name: 'Jadwal Cron',
+    href: '/admin/cron-schedules',
+    icon: ClockIcon,
+    permission: 'schedules.manage'
+  },
+  {
+    name: 'Notifikasi',
+    href: '/admin/notification-templates',
+    icon: BellIcon,
+  },
+  {
+    name: 'Google Sheets',
+    href: '/admin/google-sheets',
+    icon: TableCellsIcon,
+  },
+  {
+    name: 'Kunci API',
+    href: '/admin/api-keys',
+    icon: KeyIcon,
+  },
+  {
+    name: 'Pengguna',
     href: '/admin/users',
     icon: UsersIcon,
     permission: 'users.manage'
   },
   {
-    name: 'Manajemen Peran',
+    name: 'Peran',
     href: '/admin/roles',
     icon: ShieldCheckIcon,
     permission: 'users.manage'
   },
   {
-    name: 'Izin Akses',
+    name: 'Izin',
     href: '/admin/permissions',
     icon: ShieldExclamationIcon,
     permission: 'users.manage'
   },
   {
-    name: 'Akun',
-    href: '/admin/accounts',
-    icon: BuildingLibraryIcon,
-  },
-  {
-    name: 'Transaksi',
-    href: '/admin/transactions',
-    icon: CreditCardIcon,
-  },
-  {
-    name: 'Manajemen Flag',
-    href: '/admin/flags',
-    icon: FlagIcon,
+    name: 'Log',
+    href: '/admin/logs',
+    icon: DocumentTextIcon,
+    permission: 'logs.view'
   },
   {
     name: 'Pengaturan',
@@ -85,11 +130,16 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
 
+  // Don't show sidebar on login page
+  if (pathname === '/login') {
+    return null
+  }
+
   const hasPermission = (permission?: string) => {
     if (!permission) return true
     if (!user?.Roles) return false
-    
-    return user.Roles.some(role => 
+
+    return user.Roles.some(role =>
       role.Permissions?.some(perm => perm.name === permission)
     )
   }
@@ -107,32 +157,32 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <>
       {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-3 left-3 z-50">
+      <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsMobileOpen(true)}
-          className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 shadow-lg bg-slate-800/90 backdrop-blur-sm"
+          className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500 shadow-lg bg-white border border-slate-200"
         >
-          <Bars3Icon className="h-5 w-5" />
+          <Bars3Icon className="h-6 w-6" />
         </button>
       </div>
 
       {/* Mobile sidebar overlay */}
       {isMobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 flex">
+        <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-black bg-opacity-75"
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
             onClick={() => setIsMobileOpen(false)}
           />
-          <div className="relative flex flex-col w-64 bg-slate-900 shadow-xl">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
+          <div className="relative flex flex-col w-64 max-w-xs bg-white shadow-xl">
+            <div className="absolute top-4 right-0 -mr-12 pt-2">
               <button
                 onClick={() => setIsMobileOpen(false)}
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500"
               >
-                <XMarkIcon className="h-6 w-6 text-white" />
+                <XMarkIcon className="h-6 w-6 text-gray-600" />
               </button>
             </div>
-            <SidebarContent 
+            <SidebarContent
               filteredItems={filteredItems}
               pathname={pathname}
               user={user}
@@ -144,8 +194,8 @@ export function Sidebar({ className }: SidebarProps) {
       )}
 
       {/* Desktop sidebar */}
-      <div className={cn("hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0", className)}>
-        <SidebarContent 
+      <div className={cn("hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:z-30", className)}>
+        <SidebarContent
           filteredItems={filteredItems}
           pathname={pathname}
           user={user}
@@ -166,33 +216,40 @@ interface SidebarContentProps {
 
 function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }: SidebarContentProps) {
   return (
-    <div className="flex flex-col h-full bg-slate-900 border-r border-slate-700 shadow-sm">
+    <div className="flex flex-col h-full bg-white border-r border-slate-200 shadow-sm">
       {/* Logo/Brand */}
-      <div className="flex items-center justify-center h-14 px-3 border-b border-slate-700">
-        <h1 className="text-lg font-bold text-white">CUZBSI Admin</h1>
+      <div className="flex items-center gap-3 h-16 px-4 border-b border-slate-200 bg-white">
+        <Image
+          src="/image/logo-cuzbsi.png"
+          alt="CUZBSI Logo"
+          width={40}
+          height={40}
+          className="object-contain"
+        />
+        <h1 className="text-lg font-bold text-gray-800 tracking-tight">CUZBSI</h1>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {filteredItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
-          
+
           return (
             <Link
               key={item.name}
               href={item.href}
               onClick={onItemClick}
               className={cn(
-                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200",
+                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150",
                 isActive
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  ? "bg-green-50 text-green-700 shadow-sm border border-green-100"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               )}
             >
               <item.icon
                 className={cn(
-                  "mr-3 h-5 w-5 transition-colors duration-200 flex-shrink-0",
-                  isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                  "mr-3 h-5 w-5 transition-colors duration-150 flex-shrink-0",
+                  isActive ? "text-green-600" : "text-slate-400 group-hover:text-slate-600"
                 )}
               />
               <span className="truncate">{item.name}</span>
@@ -206,41 +263,47 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
         })}
       </nav>
 
-      {/* User section */}
-      <div className="flex-shrink-0 border-t border-slate-700">
-        <div className="px-3 py-3">
-          <div className="flex items-center mb-3">
-            <div className="flex-shrink-0">
-              <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <UserIcon className="h-4 w-4 text-white" />
-              </div>
-            </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-slate-400 truncate">
-                {user?.email}
-              </p>
+      {/* User Profile Section */}
+      <div className="border-t border-slate-200 p-4">
+        <div className="flex items-center mb-3">
+          <div className="flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+              <UserIcon className="h-6 w-6 text-green-600" />
             </div>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Link
-              href="/admin/profile"
-              onClick={onItemClick}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2 px-2 rounded-md transition-colors duration-200 text-center"
-            >
-              Profil
-            </Link>
-            <button
-              onClick={onLogout}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 px-2 rounded-md transition-colors duration-200 flex items-center justify-center"
-            >
-              <ArrowLeftEndOnRectangleIcon className="h-3 w-3 mr-1" />
-              Keluar
-            </button>
+          <div className="ml-3 flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-900 truncate">
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="text-xs text-slate-500 truncate">
+              {user?.email}
+            </p>
           </div>
+        </div>
+        <div className="space-y-1">
+          <Link
+            href="/admin/profile"
+            onClick={onItemClick}
+            className={cn(
+              "group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150",
+              pathname === '/admin/profile'
+                ? "bg-green-50 text-green-700"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            )}
+          >
+            <UserIcon className="mr-3 h-4 w-4 flex-shrink-0" />
+            <span>Profil</span>
+          </Link>
+          <button
+            onClick={() => {
+              onLogout()
+              if (onItemClick) onItemClick()
+            }}
+            className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-all duration-150"
+          >
+            <ArrowLeftEndOnRectangleIcon className="mr-3 h-4 w-4 flex-shrink-0" />
+            <span>Keluar</span>
+          </button>
         </div>
       </div>
     </div>

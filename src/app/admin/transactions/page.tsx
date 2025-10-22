@@ -2,30 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import { AdminLayout } from '@/components/layout'
-import { Card, CardContent, CardHeader, CardTitle, Button, Table, TableHeader, TableBody, TableHead, TableRow, TableCell, Badge, Pagination, LoadingPage, Select, Input, Modal } from '@/components/ui'
+import { Button, Input, Modal, LoadingPage, Pagination, Badge } from '@/components/ui'
 import { apiService } from '@/services/api'
-import { formatCurrency, formatDate, debounce } from '@/lib/utils'
+import { formatCurrency, debounce } from '@/lib/utils'
 import type { Transaction, Account, PaginationInfo } from '@/types'
 import { useForm } from 'react-hook-form'
 import {
   FunnelIcon,
   FlagIcon,
-  CreditCardIcon,
-  CalendarDaysIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
-  DocumentArrowDownIcon,
-  ChevronDownIcon,
-  PlusIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  ArrowsUpDownIcon,
   BanknotesIcon,
-  ClockIcon,
   UserIcon,
-  TagIcon,
-  DocumentTextIcon
+  ArrowsUpDownIcon,
+  CheckCircleIcon,
+  EyeIcon,
+  PhoneIcon
 } from '@heroicons/react/24/outline'
 
 interface TransactionFilters {
@@ -35,59 +27,19 @@ interface TransactionFilters {
   type?: string
   flag?: string
   search?: string
-  minAmount?: number
-  maxAmount?: number
-}
-
-interface CustomFlag {
-  id: string
-  name: string
-  color: string
-  description: string
-  category: 'income' | 'expense' | 'transfer' | 'custom'
 }
 
 interface FlagFormData {
   flagId?: string
-  customFlag?: string
-  description?: string
-  amount?: string
+  phoneNumber?: string
+  name?: string
   notes?: string
 }
-
-interface ExportOptions {
-  format: 'pdf' | 'excel' | 'csv'
-  template: 'detailed' | 'summary' | 'financial'
-  dateRange: 'current' | 'custom'
-  customStartDate?: string
-  customEndDate?: string
-  includeFlags: boolean
-  groupBy: 'none' | 'account' | 'flag' | 'type' | 'date'
-}
-
-const PREDEFINED_FLAGS: CustomFlag[] = [
-  // Income flags
-  { id: 'donatur', name: 'Donatur', color: 'bg-green-600', description: 'Donation received', category: 'income' },
-  { id: 'member', name: 'Member', color: 'bg-blue-600', description: 'Membership fee', category: 'income' },
-  { id: 'sponsor', name: 'Sponsor', color: 'bg-purple-600', description: 'Sponsorship income', category: 'income' },
-  { id: 'grant', name: 'Grant', color: 'bg-emerald-600', description: 'Grant funding', category: 'income' },
-  { id: 'fundraising', name: 'Fundraising', color: 'bg-teal-600', description: 'Fundraising event', category: 'income' },
-  
-  // Expense flags
-  { id: 'operational', name: 'Operational', color: 'bg-red-600', description: 'Operational expenses', category: 'expense' },
-  { id: 'program', name: 'Program', color: 'bg-orange-600', description: 'Program expenses', category: 'expense' },
-  { id: 'admin', name: 'Administrative', color: 'bg-yellow-600', description: 'Administrative costs', category: 'expense' },
-  { id: 'marketing', name: 'Marketing', color: 'bg-pink-600', description: 'Marketing & promotion', category: 'expense' },
-  { id: 'utilities', name: 'Utilities', color: 'bg-indigo-600', description: 'Utilities & maintenance', category: 'expense' },
-  
-  // Transfer flags
-  { id: 'internal', name: 'Internal Transfer', color: 'bg-gray-600', description: 'Internal account transfer', category: 'transfer' },
-  { id: 'external', name: 'External Transfer', color: 'bg-slate-600', description: 'External transfer', category: 'transfer' },
-]
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [flags, setFlags] = useState<any[]>([])
   const [pagination, setPagination] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 1,
@@ -96,14 +48,11 @@ export default function TransactionsPage() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [filters, setFilters] = useState<TransactionFilters>({})
-  const [sortConfig, setSortConfig] = useState({ field: 'date', direction: 'desc' as 'asc' | 'desc' })
-  const [selectedTransactions, setSelectedTransactions] = useState<Set<number>>(new Set())
+  const [sortConfig, setSortConfig] = useState({ field: 'tanggal', direction: 'desc' as 'asc' | 'desc' })
   const [flagModalOpen, setFlagModalOpen] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  const [customFlags, setCustomFlags] = useState<CustomFlag[]>([])
-  
-  // Form handling for flag management
-  const { register: registerFlag, handleSubmit: handleFlagSubmit, reset: resetFlag, watch: watchFlag, formState: { errors: flagErrors } } = useForm<FlagFormData>()
+
+  const { register: registerFlag, handleSubmit: handleFlagSubmit, reset: resetFlag, setValue: setFlagValue } = useForm<FlagFormData>()
 
   const debouncedSearch = debounce((searchTerm: string) => {
     setFilters(prev => ({ ...prev, search: searchTerm }))
@@ -112,6 +61,7 @@ export default function TransactionsPage() {
   useEffect(() => {
     fetchTransactions()
     fetchAccounts()
+    fetchFlags()
   }, [filters, pagination.currentPage, sortConfig])
 
   const fetchTransactions = async () => {
@@ -124,10 +74,17 @@ export default function TransactionsPage() {
         sortBy: sortConfig.field,
         sortOrder: sortConfig.direction
       })
-      
+
       if (response.success) {
         setTransactions(response.data.transactions)
-        setPagination(response.data.pagination)
+        if (response.data.pagination) {
+          setPagination({
+            currentPage: response.data.pagination.page,
+            totalPages: response.data.pagination.totalPages,
+            totalItems: response.data.pagination.total,
+            itemsPerPage: response.data.pagination.limit
+          })
+        }
       }
     } catch (error) {
       console.error('Error fetching transactions:', error)
@@ -147,6 +104,17 @@ export default function TransactionsPage() {
     }
   }
 
+  const fetchFlags = async () => {
+    try {
+      const response = await apiService.getFlags()
+      if (response.success) {
+        setFlags(response.data.flags)
+      }
+    } catch (error) {
+      console.error('Error fetching flags:', error)
+    }
+  }
+
   const handleFilterChange = (key: keyof TransactionFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }))
     setPagination(prev => ({ ...prev, currentPage: 1 }))
@@ -156,21 +124,6 @@ export default function TransactionsPage() {
     setPagination(prev => ({ ...prev, currentPage: page }))
   }
 
-  const handleFlagTransaction = (transaction: Transaction) => {
-    setSelectedTransaction(transaction)
-    setFlagModalOpen(true)
-  }
-
-  const getFlagVariant = (flag: string) => {
-    const flagVariants: Record<string, string> = {
-      income: 'success',
-      expense: 'destructive',
-      transfer: 'info',
-      pending: 'warning'
-    }
-    return flagVariants[flag] || 'secondary'
-  }
-
   const handleSort = (field: string) => {
     setSortConfig(prev => ({
       field,
@@ -178,392 +131,302 @@ export default function TransactionsPage() {
     }))
   }
 
+  const handleFlagTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction)
+    // Pre-fill flag if already set
+    if (transaction.flag) {
+      setFlagValue('flagId', transaction.flag)
+    }
+    // Pre-fill phone and name if available
+    if (transaction.senderPhone) {
+      setFlagValue('phoneNumber', transaction.senderPhone)
+    }
+    if (transaction.senderName) {
+      setFlagValue('name', transaction.senderName)
+    }
+    setFlagModalOpen(true)
+  }
+
   const onSubmitFlag = async (data: FlagFormData) => {
     if (!selectedTransaction) return
-    
+
     try {
-      let flagToApply = data.flagId
-      
-      // Handle custom flag creation
-      if (data.flagId === 'custom' && data.customFlag) {
-        const newCustomFlag: CustomFlag = {
-          id: `custom_${Date.now()}`,
-          name: data.customFlag,
-          color: 'bg-gray-500',
-          description: data.notes || '',
-          category: 'custom'
-        }
-        setCustomFlags(prev => [...prev, newCustomFlag])
-        flagToApply = newCustomFlag.id
-      }
-      
-      // Update transaction with flag
       const response = await apiService.updateTransactionFlag(selectedTransaction.id, {
-        flagId: flagToApply,
+        flag: data.flagId,
+        flagId: data.flagId,
+        phoneNumber: data.phoneNumber,
+        name: data.name,
         notes: data.notes
       })
-      
+
       if (response.success) {
-        // Update local state
-        setTransactions(prev => prev.map(t => 
-          t.id === selectedTransaction.id 
-            ? { ...t, flag: flagToApply, notes: data.notes }
-            : t
-        ))
-        
-        // Close modal and reset form
+        await fetchTransactions()
         setFlagModalOpen(false)
         resetFlag()
         setSelectedTransaction(null)
-        
-        // Show success message
-        console.log('Flag applied successfully')
       }
     } catch (error) {
       console.error('Failed to apply flag:', error)
-      alert('Failed to apply flag. Please try again.')
-    }
-  }
-
-  const handleBulkAction = (action: 'flag' | 'export' | 'delete') => {
-    console.log(`Bulk action: ${action} for transactions:`, Array.from(selectedTransactions))
-  }
-
-  const toggleTransactionSelection = (id: number) => {
-    setSelectedTransactions(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }
-
-  const toggleSelectAll = () => {
-    if (selectedTransactions.size === transactions.length) {
-      setSelectedTransactions(new Set())
-    } else {
-      setSelectedTransactions(new Set(transactions.map(t => t.id)))
+      alert('Gagal menerapkan penanda. Silakan coba lagi.')
     }
   }
 
   if (isLoading && transactions.length === 0) {
     return (
-      <AdminLayout title="Transaksi" description="Lihat dan kelola semua transaksi BSI">
+      <AdminLayout title="Transaksi" description="Lihat dan kelola semua transaksi">
         <LoadingPage text="Memuat transaksi..." />
       </AdminLayout>
     )
   }
 
+  // Calculate statistics
+  const totalKredit = transactions.filter(t => t.type === 'Kredit').reduce((sum, t) => sum + parseFloat(t.Amount), 0)
+  const totalDebit = transactions.filter(t => t.type === 'Debit').reduce((sum, t) => sum + parseFloat(t.Amount), 0)
+  const processedCount = transactions.filter(t => t.isProcessed).length
   const activeFiltersCount = Object.values(filters).filter(Boolean).length
 
   return (
-    <AdminLayout title="Manajemen Transaksi" description="Pelacakan dan analisis transaksi lanjutan">
-      <div className="space-y-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Transaksi</p>
-                  <p className="text-2xl font-bold">{pagination.totalItems}</p>
-                </div>
-                <BanknotesIcon className="h-8 w-8 text-blue-600" />
+    <AdminLayout title="Transaksi" description="Kelola transaksi bank">
+      <div className="space-y-4">
+        {/* Header with Statistics */}
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <BanknotesIcon className="h-5 w-5 text-green-600" />
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pemasukan</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0))}
-                  </p>
-                </div>
-                <ArrowsUpDownIcon className="h-8 w-8 text-green-600" />
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Transaksi</h2>
+                <p className="text-xs text-slate-500">Kelola dan pantau transaksi bank</p>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pengeluaran</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {formatCurrency(transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0))}
-                  </p>
-                </div>
-                <ArrowsUpDownIcon className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Saldo Bersih</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(
-                      transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) -
-                      transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
-                    )}
-                  </p>
-                </div>
-                <ClockIcon className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          {/* Statistics Grid */}
+          <div className="grid grid-cols-4 gap-4 pt-3 border-t border-slate-100">
+            <div className="text-center">
+              <div className="text-xs text-slate-500 mb-1">Total Transaksi</div>
+              <div className="text-lg font-semibold text-slate-900">{pagination.totalItems}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-slate-500 mb-1">Total Pemasukan</div>
+              <div className="text-lg font-semibold text-emerald-600">{formatCurrency(totalKredit)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-slate-500 mb-1">Total Pengeluaran</div>
+              <div className="text-lg font-semibold text-red-600">{formatCurrency(totalDebit)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-slate-500 mb-1">Diproses</div>
+              <div className="text-lg font-semibold text-blue-600">{processedCount}/{transactions.length}</div>
+            </div>
+          </div>
         </div>
 
-        {/* Filters and Search */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <FunnelIcon className="h-5 w-5" />
-                Filter & Pencarian
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary">{activeFiltersCount} filter aktif</Badge>
-                )}
-              </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setFilters({})}
-                disabled={activeFiltersCount === 0}
-              >
-                Reset Filter
-              </Button>
+        {/* Filters */}
+        <div className="bg-white px-4 py-3 rounded-lg border border-slate-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <FunnelIcon className="h-4 w-4" />
+              Filter
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="text-xs">{activeFiltersCount}</Badge>
+              )}
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Pencarian</label>
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Cari transaksi..."
-                    className="pl-10"
-                    onChange={(e) => debouncedSearch(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Akun</label>
-                <Select
-                  options={[
-                    { value: '', label: 'Semua Akun' },
-                    ...accounts.map(account => ({
-                      value: account.id.toString(),
-                      label: account.accountName || account.accountNumber
-                    }))
-                  ]}
-                  value={filters.accountId?.toString() || ''}
-                  onChange={(value) => handleFilterChange('accountId', value ? parseInt(value as string) : undefined)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Tipe</label>
-                <Select
-                  options={[
-                    { value: '', label: 'Semua Tipe' },
-                    { value: 'Kredit', label: 'Pemasukan' },
-                    { value: 'Debit', label: 'Pengeluaran' }
-                  ]}
-                  value={filters.type || ''}
-                  onChange={(value) => handleFilterChange('type', value || undefined)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Tanggal Mulai</label>
-                <Input
-                  type="date"
-                  value={filters.startDate || ''}
-                  onChange={(e) => handleFilterChange('startDate', e.target.value || undefined)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setFilters({})}
+              disabled={activeFiltersCount === 0}
+              className="text-xs"
+            >
+              Reset
+            </Button>
+          </div>
 
-        {/* Bulk Actions */}
-        {selectedTransactions.size > 0 && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {selectedTransactions.size} transaksi dipilih
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('flag')}
-                  >
-                    <FlagIcon className="h-4 w-4 mr-2" />
-                    Tandai
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('export')}
-                  >
-                    <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-                    Ekspor
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleBulkAction('delete')}
-                  >
-                    <TrashIcon className="h-4 w-4 mr-2" />
-                    Hapus
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          <div className="grid grid-cols-4 gap-3">
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Input
+                placeholder="Cari transaksi..."
+                className="pl-8 h-9 text-sm"
+                onChange={(e) => debouncedSearch(e.target.value)}
+              />
+            </div>
+
+            <select
+              value={filters.accountId?.toString() || ''}
+              onChange={(e) => handleFilterChange('accountId', e.target.value ? parseInt(e.target.value) : undefined)}
+              className="h-9 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Semua Akun</option>
+              {accounts.map(account => (
+                <option key={account.id} value={account.id}>
+                  {account.accountNumber} - {account.Bank?.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters.type || ''}
+              onChange={(e) => handleFilterChange('type', e.target.value || undefined)}
+              className="h-9 px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Semua Tipe</option>
+              <option value="Kredit">Pemasukan</option>
+              <option value="Debit">Pengeluaran</option>
+            </select>
+
+            <Input
+              type="date"
+              value={filters.startDate || ''}
+              onChange={(e) => handleFilterChange('startDate', e.target.value || undefined)}
+              className="h-9 text-sm"
+              placeholder="Tanggal Mulai"
+            />
+          </div>
+        </div>
 
         {/* Transactions Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Daftar Transaksi</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
             {transactions.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Tidak ada transaksi ditemukan</p>
+              <div className="text-center py-12 text-slate-400">
+                <BanknotesIcon className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                <p className="text-sm font-medium">Tidak ada transaksi</p>
+                <p className="text-xs mt-1">Transaksi akan muncul di sini</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <input
-                          type="checkbox"
-                          checked={selectedTransactions.size === transactions.length && transactions.length > 0}
-                          onChange={toggleSelectAll}
-                          className="rounded border-gray-300"
-                        />
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleSort('date')}
-                      >
-                        <div className="flex items-center gap-2">
-                          Tanggal
-                          <ArrowsUpDownIcon className="h-4 w-4" />
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-100"
+                      onClick={() => handleSort('tanggal')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Tanggal
+                        <ArrowsUpDownIcon className="h-3 w-3" />
+                      </div>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700">Deskripsi</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700">Pengirim</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700">Akun</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700">Tipe</th>
+                    <th
+                      className="px-4 py-3 text-right text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-100"
+                      onClick={() => handleSort('Amount')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        Jumlah
+                        <ArrowsUpDownIcon className="h-3 w-3" />
+                      </div>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-700">Penanda</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-slate-700">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {transactions.map((transaction) => (
+                    <tr key={transaction.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3">
+                        <div className="text-xs text-slate-900">
+                          {new Date(transaction.tanggal).toLocaleDateString('id-ID')}
                         </div>
-                      </TableHead>
-                      <TableHead>Deskripsi</TableHead>
-                      <TableHead>Akun</TableHead>
-                      <TableHead>Tipe</TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-muted/50 text-right"
-                        onClick={() => handleSort('amount')}
-                      >
-                        <div className="flex items-center justify-end gap-2">
-                          Jumlah
-                          <ArrowsUpDownIcon className="h-4 w-4" />
+                        <div className="text-xs text-slate-500">
+                          {new Date(transaction.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                         </div>
-                      </TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <input
-                            type="checkbox"
-                            checked={selectedTransactions.has(transaction.id)}
-                            onChange={() => toggleTransactionSelection(transaction.id)}
-                            className="rounded border-gray-300"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <CalendarDaysIcon className="h-4 w-4 text-muted-foreground" />
-                            {formatDate(transaction.date)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm text-slate-900 max-w-xs truncate" title={transaction.description}>
+                          {transaction.description}
+                        </div>
+                        {transaction.unique && (
+                          <div className="text-xs text-slate-500 font-mono">{transaction.unique}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {transaction.senderName ? (
+                          <div className="text-sm text-slate-900 flex items-center gap-1">
+                            <UserIcon className="h-3 w-3" />
+                            {transaction.senderName}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="max-w-xs truncate" title={transaction.description}>
-                            {transaction.description}
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                        {transaction.senderPhone && (
+                          <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                            <PhoneIcon className="h-3 w-3" />
+                            {transaction.senderPhone}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
-                            {transaction.account?.name || 'N/A'}
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-xs text-slate-900">{transaction.Account?.accountNumber}</div>
+                        <div className="text-xs text-slate-500">{transaction.Account?.Bank?.name}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
+                          transaction.type === 'Kredit' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {transaction.type}
+                        </span>
+                        {transaction.isProcessed && (
+                          <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
+                            <CheckCircleIcon className="h-3 w-3" />
+                            Diproses
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getFlagVariant(transaction.type)}>
-                            {transaction.type === 'income' ? 'Pemasukan' : 
-                             transaction.type === 'expense' ? 'Pengeluaran' : 'Transfer'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          <span className={transaction.type === 'income' ? 'text-green-600' : 
-                                         transaction.type === 'expense' ? 'text-red-600' : 'text-blue-600'}>
-                            {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className={`font-mono text-sm font-medium ${
+                          transaction.type === 'Kredit' ? 'text-emerald-600' : 'text-red-600'
+                        }`}>
+                          {transaction.type === 'Debit' ? '-' : '+'}{formatCurrency(parseFloat(transaction.Amount))}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          Saldo: {formatCurrency(parseFloat(transaction.Balance))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {transaction.flag ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                            <FlagIcon className="h-3 w-3" />
+                            {flags.find(f => f.id === transaction.flag)?.name || transaction.flag}
                           </span>
-                        </TableCell>
-                        <TableCell>
-                          {transaction.flag ? (
-                            <Badge variant="outline">
-                              {PREDEFINED_FLAGS.find(f => f.id === transaction.flag)?.name || transaction.flag}
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">Belum ditandai</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleFlagTransaction(transaction)}
-                            >
-                              <FlagIcon className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <EyeIcon className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <PencilIcon className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                
-                <Pagination
-                  currentPage={pagination.currentPage}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-center gap-1">
+                          <button
+                            onClick={() => handleFlagTransaction(transaction)}
+                            className="p-1.5 text-purple-600 hover:bg-purple-50 rounded"
+                            title="Kelola Penanda"
+                          >
+                            <FlagIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Pagination */}
+          {transactions.length > 0 && (
+            <div className="px-4 py-3 border-t border-slate-200">
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Flag Management Modal */}
         <Modal
@@ -574,114 +437,139 @@ export default function TransactionsPage() {
             resetFlag()
           }}
           title="Kelola Penanda Transaksi"
+          size="lg"
         >
           {selectedTransaction && (
             <div className="space-y-6">
               {/* Transaction Details */}
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Detail Transaksi</h4>
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-3">Detail Transaksi</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Jumlah:</span>
-                    <p className="font-medium">{formatCurrency(selectedTransaction.amount)}</p>
+                    <span className="text-slate-500 block mb-1">Jumlah:</span>
+                    <p className="font-semibold text-slate-900">{formatCurrency(parseFloat(selectedTransaction.Amount))}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Tanggal:</span>
-                    <p className="font-medium">{formatDate(selectedTransaction.date)}</p>
+                    <span className="text-slate-500 block mb-1">Tanggal:</span>
+                    <p className="font-semibold text-slate-900">{new Date(selectedTransaction.tanggal).toLocaleString('id-ID')}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Akun:</span>
-                    <p className="font-medium">{selectedTransaction.account?.name}</p>
+                    <span className="text-slate-500 block mb-1">Akun:</span>
+                    <p className="font-semibold text-slate-900">{selectedTransaction.Account?.accountNumber}</p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Deskripsi:</span>
-                    <p className="font-medium">{selectedTransaction.description}</p>
+                    <span className="text-slate-500 block mb-1">Tipe:</span>
+                    <p className="font-semibold text-slate-900">
+                      <span className={`inline-flex px-2 py-0.5 text-xs rounded-full ${
+                        selectedTransaction.type === 'Kredit' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {selectedTransaction.type}
+                      </span>
+                    </p>
                   </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-500 block mb-1">Deskripsi:</span>
+                    <p className="font-medium text-slate-900">{selectedTransaction.description}</p>
+                  </div>
+                  {selectedTransaction.senderName && (
+                    <div className="col-span-2">
+                      <span className="text-slate-500 block mb-1">Pengirim:</span>
+                      <p className="font-medium text-slate-900">{selectedTransaction.senderName}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Flag Selection Form */}
               <form onSubmit={handleFlagSubmit(onSubmitFlag)} className="space-y-6">
-                {/* Predefined Flags */}
+                {/* Flags from API */}
                 <div className="space-y-3">
-                  <label className="text-sm font-medium">Pilih Kategori Penanda</label>
-                  <div className="space-y-2">
-                    {['income', 'expense', 'transfer'].map(category => (
-                      <div key={category}>
-                        <h5 className="text-sm font-medium text-muted-foreground mb-2 capitalize">
-                          {category === 'income' ? 'Pemasukan' : category === 'expense' ? 'Pengeluaran' : 'Transfer'}
-                        </h5>
-                        <div className="grid grid-cols-2 gap-2">
-                          {PREDEFINED_FLAGS.filter(flag => flag.category === category).map(flag => (
-                            <label key={flag.id} className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-muted/50">
-                              <input
-                                type="radio"
-                                value={flag.id}
-                                {...registerFlag('flagId')}
-                                className="text-primary"
-                              />
-                              <span className={`w-3 h-3 rounded-full ${flag.color}`}></span>
-                              <span className="text-sm">{flag.name}</span>
-                            </label>
-                          ))}
-                        </div>
+                  <label className="text-sm font-medium text-slate-700">Pilih Penanda</label>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {flags?.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {flags.map(flag => (
+                          <label key={flag.id} className="flex items-center space-x-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                            <input
+                              type="radio"
+                              value={flag.id}
+                              {...registerFlag('flagId')}
+                              className="text-blue-600 focus:ring-blue-500"
+                            />
+                            <span
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: flag.color || '#6b7280' }}
+                            ></span>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium text-slate-900 block truncate">{flag.name}</span>
+                              {flag.description && (
+                                <span className="text-xs text-slate-500 block truncate">{flag.description}</span>
+                              )}
+                            </div>
+                          </label>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      <p className="text-sm text-slate-500 text-center py-4">Tidak ada penanda tersedia</p>
+                    )}
                   </div>
-                </div>
-
-                {/* Custom Flag Option */}
-                <div className="space-y-3">
-                  <label className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-muted/50">
-                    <input
-                      type="radio"
-                      value="custom"
-                      {...registerFlag('flagId')}
-                      className="text-primary"
-                    />
-                    <span className="text-sm font-medium">Penanda Kustom</span>
-                  </label>
-                  
-                  {watchFlag('flagId') === 'custom' && (
-                    <div className="ml-6 space-y-2">
-                      <Input
-                        placeholder="Nama penanda kustom"
-                        {...registerFlag('customFlag', { required: watchFlag('flagId') === 'custom' })}
-                      />
-                      {flagErrors.customFlag && (
-                        <p className="text-sm text-destructive">Nama penanda kustom wajib diisi</p>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {/* Remove Flag Option */}
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-2 p-2 border rounded cursor-pointer hover:bg-muted/50">
+                  <label className="flex items-center space-x-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                     <input
                       type="radio"
                       value=""
                       {...registerFlag('flagId')}
-                      className="text-primary"
+                      className="text-blue-600 focus:ring-blue-500"
                     />
-                    <XMarkIcon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Hapus Penanda</span>
+                    <XMarkIcon className="h-4 w-4 text-slate-400" />
+                    <span className="text-sm font-medium text-slate-700">Hapus Penanda</span>
                   </label>
+                </div>
+
+                {/* Contact Information for Notification */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-4">
+                  <h5 className="text-sm font-semibold text-blue-900 flex items-center gap-2">
+                    <PhoneIcon className="h-4 w-4" />
+                    Informasi Kontak untuk Notifikasi
+                  </h5>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="Nomor Telepon"
+                      placeholder="08123456789"
+                      {...registerFlag('phoneNumber')}
+                      className="bg-white"
+                    />
+
+                    <Input
+                      label="Nama"
+                      placeholder="Nama penerima"
+                      {...registerFlag('name')}
+                      className="bg-white"
+                    />
+                  </div>
+
+                  <p className="text-xs text-blue-700">
+                    Nomor telepon akan digunakan untuk mengirim notifikasi WhatsApp jika penanda memiliki template notifikasi.
+                  </p>
                 </div>
 
                 {/* Notes */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Catatan (Opsional)</label>
+                  <label className="text-sm font-medium text-slate-700">Catatan (Opsional)</label>
                   <textarea
                     placeholder="Tambahkan catatan untuk transaksi ini..."
-                    className="w-full p-2 border rounded-md resize-none"
+                    className="w-full p-3 border border-slate-200 rounded-lg resize-none text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={3}
                     {...registerFlag('notes')}
                   />
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
                   <Button
                     type="button"
                     variant="outline"
