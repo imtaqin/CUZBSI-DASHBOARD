@@ -173,11 +173,11 @@ export function Sidebar({ className }: SidebarProps) {
             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
             onClick={() => setIsMobileOpen(false)}
           />
-          <div className="relative flex flex-col w-64 max-w-xs bg-white shadow-xl">
-            <div className="absolute top-4 right-0 -mr-12 pt-2">
+          <div className="relative flex flex-col w-full max-w-sm bg-white shadow-xl">
+            <div className="absolute top-4 right-4 z-10">
               <button
                 onClick={() => setIsMobileOpen(false)}
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500"
+                className="flex items-center justify-center h-10 w-10 rounded-full bg-white shadow-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500"
               >
                 <XMarkIcon className="h-6 w-6 text-gray-600" />
               </button>
@@ -224,9 +224,9 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
           alt="CUZBSI Logo"
           width={40}
           height={40}
-          className="object-contain"
+          className="object-contain flex-shrink-0"
         />
-        <h1 className="text-lg font-bold text-gray-800 tracking-tight">CUZBSI</h1>
+        <h1 className="text-lg font-bold text-gray-800 tracking-tight truncate">CUZBSI</h1>
       </div>
 
       {/* Navigation */}
@@ -240,7 +240,7 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
               href={item.href}
               onClick={onItemClick}
               className={cn(
-                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150",
+                "group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-150 min-h-[44px]",
                 isActive
                   ? "bg-green-50 text-green-700 shadow-sm border border-green-100"
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -252,7 +252,7 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
                   isActive ? "text-green-600" : "text-slate-400 group-hover:text-slate-600"
                 )}
               />
-              <span className="truncate">{item.name}</span>
+              <span className="truncate flex-1">{item.name}</span>
               {item.badge && (
                 <span className="ml-auto inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-red-100 text-red-800 flex-shrink-0">
                   {item.badge}
@@ -285,24 +285,24 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
             href="/admin/profile"
             onClick={onItemClick}
             className={cn(
-              "group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150",
+              "group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-150 min-h-[44px]",
               pathname === '/admin/profile'
                 ? "bg-green-50 text-green-700"
                 : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
             )}
           >
             <UserIcon className="mr-3 h-4 w-4 flex-shrink-0" />
-            <span>Profil</span>
+            <span className="truncate">Profil</span>
           </Link>
           <button
             onClick={() => {
               onLogout()
               if (onItemClick) onItemClick()
             }}
-            className="w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-all duration-150"
+            className="w-full group flex items-center px-3 py-3 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-all duration-150 min-h-[44px]"
           >
             <ArrowLeftEndOnRectangleIcon className="mr-3 h-4 w-4 flex-shrink-0" />
-            <span>Keluar</span>
+            <span className="truncate">Keluar</span>
           </button>
         </div>
       </div>

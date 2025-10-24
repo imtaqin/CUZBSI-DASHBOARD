@@ -24,7 +24,7 @@ export default function RootLayout({
           <Sidebar />
 
           {/* Main content - Has left padding to account for fixed sidebar */}
-          <div className="lg:pl-64">
+          <div className="lg:pl-64 min-h-screen">
             {children}
           </div>
         </AuthProvider>

@@ -32,14 +32,14 @@ export function Header({ title }: HeaderProps) {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left side - Title and Search */}
-          <div className="flex items-center flex-1">
+          <div className="flex items-center flex-1 min-w-0">
             {title && (
-              <div className="mr-4">
-                <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+              <div className="mr-2 sm:mr-4 flex-shrink-0">
+                <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">{title}</h1>
               </div>
             )}
             {/* Search Bar */}
-            <div className="hidden md:block max-w-md w-full lg:ml-4">
+            <div className="hidden sm:block max-w-xs md:max-w-md w-full ml-2 sm:ml-4">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -54,7 +54,7 @@ export function Header({ title }: HeaderProps) {
           </div>
 
           {/* Right side - Notifications and User */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             {/* Notifications */}
             <button
               type="button"
@@ -79,38 +79,38 @@ export function Header({ title }: HeaderProps) {
 
               {/* Profile dropdown menu */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <div className="absolute right-0 z-10 mt-2 w-48 sm:w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div className="px-4 py-2 border-b border-gray-200">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       {user?.firstName} {user?.lastName}
                     </p>
                     <p className="text-sm text-gray-500 truncate">
                       {user?.email}
                     </p>
                   </div>
-                  
+
                   <a
                     href="/admin/profile"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 min-h-[44px]"
                   >
-                    <UserCircleIcon className="mr-3 h-5 w-5 text-gray-400" />
-                    Your Profile
+                    <UserCircleIcon className="mr-3 h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <span className="truncate">Your Profile</span>
                   </a>
-                  
+
                   <a
                     href="/admin/settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 min-h-[44px]"
                   >
-                    <Cog6ToothIcon className="mr-3 h-5 w-5 text-gray-400" />
-                    Settings
+                    <Cog6ToothIcon className="mr-3 h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <span className="truncate">Settings</span>
                   </a>
-                  
+
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 min-h-[44px]"
                   >
-                    <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 text-gray-400" />
-                    Sign out
+                    <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <span className="truncate">Sign out</span>
                   </button>
                 </div>
               )}
