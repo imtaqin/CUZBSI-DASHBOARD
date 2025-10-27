@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { useNotifications } from '@/hooks/useNotifications'
+import { NotificationDropdown } from '@/components/NotificationDropdown'
 import { Button } from '@/components/ui'
 import {
   BellIcon,
@@ -17,7 +19,9 @@ interface HeaderProps {
 
 export function Header({ title }: HeaderProps) {
   const { user, logout } = useAuth()
+  const { unreadCount } = useNotifications()
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -26,6 +30,13 @@ export function Header({ title }: HeaderProps) {
       console.error('Logout error:', error)
     }
   }
+
+  // Close notification dropdown when profile menu opens
+  useEffect(() => {
+    if (isProfileMenuOpen) {
+      setIsNotificationDropdownOpen(false)
+    }
+  }, [isProfileMenuOpen])
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
@@ -56,13 +67,25 @@ export function Header({ title }: HeaderProps) {
           {/* Right side - Notifications and User */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             {/* Notifications */}
-            <button
-              type="button"
-              className="relative p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <BellIcon className="h-6 w-6" />
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsNotificationDropdownOpen(!isNotificationDropdownOpen)}
+                className="relative p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                aria-label="Notifications"
+              >
+                <BellIcon className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 flex items-center justify-center h-5 w-5 text-xs font-bold rounded-full bg-red-500 text-white ring-2 ring-white">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <NotificationDropdown
+                isOpen={isNotificationDropdownOpen}
+                onClose={() => setIsNotificationDropdownOpen(false)}
+              />
+            </div>
 
             {/* Profile dropdown */}
             <div className="relative">

@@ -722,6 +722,103 @@ class ApiService {
     return response.data
   }
 
+  // Activity Logs and Notifications
+  async getActivityLogs(params?: {
+    page?: number
+    limit?: number
+    accountId?: number
+    status?: string
+    action?: string
+  }): Promise<ApiResponse<{
+    logs: any[]
+    pagination: PaginationInfo
+  }>> {
+    const response = await this.api.get<ApiResponse<{ logs: any[]; pagination: PaginationInfo }>>('/api/notifications/activity-logs', {
+      params,
+    })
+    return response.data
+  }
+
+  async getActivityStats(params?: {
+    period?: string
+    accountId?: number
+  }): Promise<ApiResponse<{
+    data: {
+      period: string
+      totalCount: number
+      statsByAction: Record<string, number>
+      statsByStatus: Record<string, number>
+    }
+  }>> {
+    const response = await this.api.get<ApiResponse<{ data: any }>>('/api/notifications/activity-stats', {
+      params,
+    })
+    return response.data
+  }
+
+  // Notification Read Status Endpoints
+  async getUnreadNotifications(params?: {
+    accountId?: number
+    limit?: number
+  }): Promise<ApiResponse<{
+    count: number
+    notifications: any[]
+  }>> {
+    const response = await this.api.get<ApiResponse<{ count: number; notifications: any[] }>>('/api/notifications/unread', {
+      params,
+    })
+    return response.data
+  }
+
+  async markNotificationAsRead(id: number): Promise<ApiResponse<{
+    id: number
+    isRead: boolean
+    readAt: string
+  }>> {
+    const response = await this.api.patch<ApiResponse<{ id: number; isRead: boolean; readAt: string }>>(`/api/notifications/${id}/mark-read`)
+    return response.data
+  }
+
+  async markAllNotificationsAsRead(accountId?: number): Promise<ApiResponse<{
+    updatedCount: number
+    timestamp: string
+  }>> {
+    const response = await this.api.patch<ApiResponse<{ updatedCount: number; timestamp: string }>>('/api/notifications/mark-all-read', {}, {
+      params: accountId ? { accountId } : undefined,
+    })
+    return response.data
+  }
+
+  async markNotificationAsUnread(id: number): Promise<ApiResponse<{
+    id: number
+    isRead: boolean
+    readAt: string | null
+  }>> {
+    const response = await this.api.patch<ApiResponse<{ id: number; isRead: boolean; readAt: string | null }>>(`/api/notifications/${id}/mark-unread`)
+    return response.data
+  }
+
+  async getNotificationStatusSummary(params?: {
+    accountId?: number
+    period?: string
+  }): Promise<ApiResponse<{
+    data: {
+      total: number
+      read: number
+      unread: number
+      readPercentage: number
+      period: string
+      lastNotificationDate: string
+      statusByAction: Record<string, any>
+      dateRange: { startDate: string; endDate: string }
+    }
+  }>> {
+    const response = await this.api.get<ApiResponse<{ data: any }>>('/api/notifications/status-summary', {
+      params,
+    })
+    return response.data
+  }
+
   // Google Sheets
   async getGoogleSheets(): Promise<ApiResponse<{ configs: any[] }>> {
     const response = await this.api.get<ApiResponse<{ configs: any[] }>>('/api/google-sheets')
