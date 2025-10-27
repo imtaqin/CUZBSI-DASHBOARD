@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useNotifications, type Notification } from '@/hooks/useNotifications'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  XMarkIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  CreditCardIcon,
+  ArrowPathIcon
+} from '@heroicons/react/24/outline'
 
 interface NotificationDropdownProps {
   isOpen: boolean
@@ -44,17 +50,19 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
   }
 
   const getNotificationIcon = (type: Notification['type']) => {
+    const iconProps = 'h-5 w-5 flex-shrink-0'
+
     switch (type) {
       case 'success':
-        return '✅'
+        return <CheckCircleIcon className={`${iconProps} text-green-600`} />
       case 'error':
-        return '⚠️'
+        return <ExclamationTriangleIcon className={`${iconProps} text-red-600`} />
       case 'transaction':
-        return '💳'
+        return <CreditCardIcon className={`${iconProps} text-slate-600`} />
       case 'sync':
-        return '🔄'
+        return <ArrowPathIcon className={`${iconProps} text-blue-600`} />
       default:
-        return '📢'
+        return <CheckCircleIcon className={`${iconProps} text-slate-600`} />
     }
   }
 
@@ -141,7 +149,9 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span className="text-lg mt-0.5 flex-shrink-0">{getNotificationIcon(notification.type)}</span>
+                    <div className="mt-0.5">
+                      {getNotificationIcon(notification.type)}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900 line-clamp-2">{notification.message}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{formatTime(notification.timestamp)}</p>
