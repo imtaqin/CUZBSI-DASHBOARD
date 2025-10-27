@@ -61,10 +61,25 @@ interface UseNotificationsReturn {
 export function useNotifications(): UseNotificationsReturn {
   const { user, isAuthenticated } = useAuth()
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [readNotificationIds, setReadNotificationIds] = useState<Set<number>>(new Set())
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([])
   const [activityStats, setActivityStats] = useState<ActivityStats | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Load read notification IDs from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.id) {
+      const stored = localStorage.getItem(`notifications_read_${user.id}`)
+      if (stored) {
+        try {
+          setReadNotificationIds(new Set(JSON.parse(stored)))
+        } catch (e) {
+          console.error('Failed to parse stored read notifications:', e)
+        }
+      }
+    }
+  }, [user?.id])
 
   // Fetch activity logs
   const fetchActivityLogs = useCallback(
@@ -139,14 +154,17 @@ export function useNotifications(): UseNotificationsReturn {
           type = 'error'
         }
 
+        // Check if this notification ID has been marked as read
+        const isRead = readNotificationIds.has(log.id)
+
         const notification: Notification = {
           id: `activity-${log.id}`,
           apiId: log.id, // Store API ID for read status updates
           type,
           message: log.description,
           timestamp: log.createdAt,
-          read: false,
-          isRead: false,
+          read: isRead,
+          isRead: isRead,
           data: log.metadata,
         }
 
@@ -160,7 +178,7 @@ export function useNotifications(): UseNotificationsReturn {
         return [...newNotifs, ...prev].slice(0, 50)
       })
     }
-  }, [activityLogs])
+  }, [activityLogs, readNotificationIds])
 
   // Handle real-time notifications from socket
   useEffect(() => {
@@ -241,16 +259,28 @@ export function useNotifications(): UseNotificationsReturn {
 
       try {
         await apiService.markNotificationAsRead(notification.apiId)
+
+        // Update local state
         setNotifications(prev =>
           prev.map(notif =>
             notif.id === id ? { ...notif, read: true, isRead: true } : notif
           )
         )
+
+        // Save to localStorage
+        setReadNotificationIds(prev => {
+          const updated = new Set(prev)
+          updated.add(notification.apiId!)
+          if (typeof window !== 'undefined' && user?.id) {
+            localStorage.setItem(`notifications_read_${user.id}`, JSON.stringify([...updated]))
+          }
+          return updated
+        })
       } catch (err) {
         console.error('Error marking notification as read:', err)
       }
     },
-    [notifications]
+    [notifications, user?.id]
   )
 
   const markAsUnread = useCallback(
@@ -260,30 +290,58 @@ export function useNotifications(): UseNotificationsReturn {
 
       try {
         await apiService.markNotificationAsUnread(notification.apiId)
+
+        // Update local state
         setNotifications(prev =>
           prev.map(notif =>
             notif.id === id ? { ...notif, read: false, isRead: false } : notif
           )
         )
+
+        // Remove from localStorage
+        setReadNotificationIds(prev => {
+          const updated = new Set(prev)
+          updated.delete(notification.apiId!)
+          if (typeof window !== 'undefined' && user?.id) {
+            localStorage.setItem(`notifications_read_${user.id}`, JSON.stringify([...updated]))
+          }
+          return updated
+        })
       } catch (err) {
         console.error('Error marking notification as unread:', err)
       }
     },
-    [notifications]
+    [notifications, user?.id]
   )
 
   const markAllAsRead = useCallback(
     async (accountId?: number) => {
       try {
         await apiService.markAllNotificationsAsRead(accountId)
+
+        // Update local state
         setNotifications(prev =>
           prev.map(notif => ({ ...notif, read: true, isRead: true }))
         )
+
+        // Save all notification IDs to localStorage
+        setReadNotificationIds(prev => {
+          const updated = new Set(prev)
+          notifications.forEach(notif => {
+            if (notif.apiId) {
+              updated.add(notif.apiId)
+            }
+          })
+          if (typeof window !== 'undefined' && user?.id) {
+            localStorage.setItem(`notifications_read_${user.id}`, JSON.stringify([...updated]))
+          }
+          return updated
+        })
       } catch (err) {
         console.error('Error marking all notifications as read:', err)
       }
     },
-    []
+    [notifications, user?.id]
   )
 
   const dismissNotification = useCallback((id: string) => {
