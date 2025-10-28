@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cuzbsibackend.imtaqin.id",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

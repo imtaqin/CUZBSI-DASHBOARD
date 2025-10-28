@@ -26,7 +26,8 @@ import {
   BellIcon,
   BanknotesIcon,
   TableCellsIcon,
-  KeyIcon
+  KeyIcon,
+  ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 
 interface SidebarItem {
@@ -79,6 +80,11 @@ const sidebarItems: SidebarItem[] = [
     name: 'Notifikasi',
     href: '/admin/notification-templates',
     icon: BellIcon,
+  },
+  {
+    name: 'Log WhatsApp',
+    href: '/admin/whatsapp-logs',
+    icon: ChatBubbleLeftIcon,
   },
   {
     name: 'Google Sheets',

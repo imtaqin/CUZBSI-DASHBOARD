@@ -366,179 +366,142 @@ export default function AccountsPage() {
           </div>
         </div>
 
-        {/* DataTable */}
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          {accounts.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <BuildingLibraryIcon className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-              <p className="text-sm font-medium">Tidak ada akun ditemukan</p>
-              <p className="text-xs mt-1">Klik "Tambah Akun" untuk menambahkan akun BSI</p>
-            </div>
-          ) : (
-            <>
-              {/* Mobile Card View */}
-              <div className="sm:hidden divide-y divide-slate-100">
-                {accounts.map((account) => (
-                  <div key={account.id} className="p-4 hover:bg-slate-50">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="font-medium text-sm text-slate-900 mb-1">
-                          {account.accountNumber}
+        {/* Accounts Grid */}
+        {accounts.length === 0 ? (
+          <div className="bg-white rounded-lg border border-slate-200 text-center py-12">
+            <BuildingLibraryIcon className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+            <p className="text-sm font-medium text-slate-400">Tidak ada akun ditemukan</p>
+            <p className="text-xs text-slate-500 mt-1">Klik "Tambah Akun" untuk menambahkan akun BSI</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {accounts.map((account) => (
+              <div
+                key={account.id}
+                className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+              >
+                {/* Card Header with Bank Logo */}
+                <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {account.Bank.logoUrl ? (
+                        <img
+                          src={account.Bank.logoUrl}
+                          alt={account.Bank.name}
+                          className="h-8 w-8 rounded-md object-contain flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-md bg-slate-300 flex items-center justify-center flex-shrink-0">
+                          <BuildingLibraryIcon className="h-4 w-4 text-slate-600" />
                         </div>
-                        <div className="text-xs text-slate-500">{account.username}</div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-slate-900">{account.Bank.name}</div>
+                        <div className="text-xs text-slate-500">{account.Bank.code}</div>
                       </div>
-                      {getStatusBadge(account)}
                     </div>
+                    {getStatusBadge(account)}
+                  </div>
+                </div>
 
-                    <div className="space-y-2 mb-3">
-                      <div className="flex items-center gap-2 text-xs">
-                        <BuildingLibraryIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="text-slate-700">{account.Bank.name}</span>
-                        <span className="text-slate-400">({account.Bank.code})</span>
-                      </div>
+                {/* Card Body */}
+                <div className="p-4 space-y-3">
+                  {/* Account Number */}
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Nomor Rekening</div>
+                    <div className="text-sm font-mono font-semibold text-slate-900 break-all">
+                      {account.accountNumber}
+                    </div>
+                  </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Saldo:</span>
-                        <span className="font-mono text-sm font-semibold text-slate-900">
-                          {formatCurrency(account.lastBalance)}
-                        </span>
-                      </div>
+                  {/* Balance */}
+                  <div className="bg-slate-50 rounded-md p-3">
+                    <div className="text-xs text-slate-500 mb-1">Saldo Terakhir</div>
+                    <div className="text-lg font-bold text-emerald-600">
+                      {formatCurrency(account.lastBalance)}
+                    </div>
+                  </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Sync Terakhir:</span>
-                        <span className="text-xs text-slate-700">{getLastRunInfo(account)}</span>
-                      </div>
+                  {/* Account Type */}
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Tipe Akun</div>
+                    <div className="inline-flex px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                      {account.accountType}
+                    </div>
+                  </div>
 
-                      {account.ScrapingOption && (
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                          <div className="flex items-center gap-2">
-                            <ClockIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                            <span className="text-xs font-medium text-slate-700">
-                              {account.ScrapingOption.cronExpression}
-                            </span>
-                          </div>
-                          <span className={`text-xs font-medium ${account.ScrapingOption.isActive ? 'text-green-600' : 'text-slate-400'}`}>
+                  {/* Sync Info */}
+                  {account.ScrapingOption ? (
+                    <div className="border-t border-slate-100 pt-3">
+                      <div className="text-xs text-slate-500 mb-2">Sinkronisasi Otomatis</div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-600">Jadwal:</span>
+                          <span className="text-xs font-mono font-semibold text-slate-900">
+                            {account.ScrapingOption.cronExpression}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-600">Status:</span>
+                          <span
+                            className={`text-xs font-medium ${
+                              account.ScrapingOption.isActive
+                                ? 'text-green-600'
+                                : 'text-slate-400'
+                            }`}
+                          >
                             {account.ScrapingOption.isActive ? 'Aktif' : 'Nonaktif'}
                           </span>
                         </div>
-                      )}
-
-                      {account.ScrapingOption?.errorMessage && (
-                        <div className="bg-red-50 border border-red-100 rounded p-2 text-xs text-red-600">
-                          {account.ScrapingOption.errorMessage}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-600">Sinkronisasi Terakhir:</span>
+                          <span className="text-xs text-slate-700">{getLastRunInfo(account)}</span>
                         </div>
-                      )}
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSyncAccount(account.id)}
-                        loading={syncingAccounts.has(account.id)}
-                        disabled={!account.isActive}
-                        className="flex-1"
-                      >
-                        <PlayIcon className="h-3.5 w-3.5 mr-1" />
-                        Sync
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditCron(account)}
-                        className="flex-1"
-                      >
-                        <CogIcon className="h-3.5 w-3.5 mr-1" />
-                        Jadwal
-                      </Button>
+                  ) : (
+                    <div className="border-t border-slate-100 pt-3 text-center">
+                      <span className="text-xs text-slate-400">Tidak ada jadwal sinkronisasi</span>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
 
-              {/* Desktop Table View */}
-              <div className="hidden sm:block overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="py-2">Nomor Rekening</TableHead>
-                      <TableHead className="py-2">Bank</TableHead>
-                      <TableHead className="py-2">Saldo</TableHead>
-                      <TableHead className="py-2">Status</TableHead>
-                      <TableHead className="py-2">Sync Terakhir</TableHead>
-                      <TableHead className="py-2">Jadwal</TableHead>
-                      <TableHead className="py-2 text-right">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {accounts.map((account) => (
-                      <TableRow key={account.id} className="hover:bg-slate-50">
-                        <TableCell className="py-2">
-                          <div className="font-medium text-sm">{account.accountNumber}</div>
-                          <div className="text-xs text-slate-500">{account.username}</div>
-                        </TableCell>
-                        <TableCell className="py-2">
-                          <div className="text-sm font-medium">{account.Bank.name}</div>
-                          <div className="text-xs text-slate-500">{account.Bank.code}</div>
-                        </TableCell>
-                        <TableCell className="py-2 font-mono text-sm">
-                          {formatCurrency(account.lastBalance)}
-                        </TableCell>
-                        <TableCell className="py-2">
-                          {getStatusBadge(account)}
-                          {account.ScrapingOption?.errorMessage && (
-                            <div className="text-xs text-red-600 max-w-[150px] truncate mt-0.5" title={account.ScrapingOption.errorMessage}>
-                              {account.ScrapingOption.errorMessage}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-2 text-sm text-slate-600">
-                          {getLastRunInfo(account)}
-                        </TableCell>
-                        <TableCell className="py-2">
-                          {account.ScrapingOption ? (
-                            <div className="text-xs">
-                              <div className="font-medium text-slate-700">
-                                {account.ScrapingOption.cronExpression}
-                              </div>
-                              <div className={account.ScrapingOption.isActive ? 'text-green-600' : 'text-slate-400'}>
-                                {account.ScrapingOption.isActive ? 'Aktif' : 'Nonaktif'}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 text-xs">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-2 text-right">
-                          <div className="flex justify-end space-x-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSyncAccount(account.id)}
-                              loading={syncingAccounts.has(account.id)}
-                              disabled={!account.isActive}
-                              title="Sinkronisasi"
-                            >
-                              <PlayIcon className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditCron(account)}
-                              title="Kelola Jadwal"
-                            >
-                              <CogIcon className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                  {/* Error Message */}
+                  {account.ScrapingOption?.errorMessage && (
+                    <div className="bg-red-50 border border-red-100 rounded-md p-2">
+                      <p className="text-xs text-red-600 line-clamp-2">
+                        <strong>Error:</strong> {account.ScrapingOption.errorMessage}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Footer - Actions */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSyncAccount(account.id)}
+                    loading={syncingAccounts.has(account.id)}
+                    disabled={!account.isActive}
+                    className="flex-1"
+                  >
+                    <PlayIcon className="h-3.5 w-3.5 mr-1" />
+                    Sync
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditCron(account)}
+                    className="flex-1"
+                  >
+                    <CogIcon className="h-3.5 w-3.5 mr-1" />
+                    Jadwal
+                  </Button>
+                </div>
               </div>
-            </>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Compact Add Account Modal */}
         <Modal

@@ -910,6 +910,55 @@ class ApiService {
     const response = await this.api.patch<ApiResponse<{ apiKey: any }>>(`/api/api-keys/${id}/toggle`)
     return response.data
   }
+
+  // WhatsApp Logs Endpoints
+  async getWhatsAppLogs(params?: {
+    status?: 'pending' | 'sent' | 'failed'
+    phoneNumber?: string
+    period?: string
+    limit?: number
+    offset?: number
+  }): Promise<ApiResponse<any>> {
+    const response = await this.api.get<ApiResponse<any>>('/api/whatsapp-logs', { params })
+    return response.data
+  }
+
+  async getWhatsAppLogById(id: number): Promise<ApiResponse<any>> {
+    const response = await this.api.get<ApiResponse<any>>(`/api/whatsapp-logs/${id}`)
+    return response.data
+  }
+
+  async getWhatsAppLogsByPhoneNumber(phoneNumber: string, params?: {
+    status?: 'pending' | 'sent' | 'failed'
+    limit?: number
+    offset?: number
+  }): Promise<ApiResponse<any>> {
+    const response = await this.api.get<ApiResponse<any>>(`/api/whatsapp-logs/phone/${phoneNumber}`, { params })
+    return response.data
+  }
+
+  async getWhatsAppLogsByTransactionId(transactionId: number): Promise<ApiResponse<any>> {
+    const response = await this.api.get<ApiResponse<any>>(`/api/whatsapp-logs/transaction/${transactionId}`)
+    return response.data
+  }
+
+  async getWhatsAppStats(params?: { period?: string }): Promise<ApiResponse<any>> {
+    const response = await this.api.get<ApiResponse<any>>('/api/whatsapp-logs/stats', { params })
+    return response.data
+  }
+
+  async getFailedWhatsAppMessages(params?: {
+    limit?: number
+    offset?: number
+  }): Promise<ApiResponse<any>> {
+    const response = await this.api.get<ApiResponse<any>>('/api/whatsapp-logs/failed', { params })
+    return response.data
+  }
+
+  async retryWhatsAppMessage(id: number): Promise<ApiResponse<any>> {
+    const response = await this.api.patch<ApiResponse<any>>(`/api/whatsapp-logs/${id}/retry`)
+    return response.data
+  }
 }
 
 export const apiService = new ApiService()

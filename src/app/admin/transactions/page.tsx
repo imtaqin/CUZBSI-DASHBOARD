@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { AdminLayout } from '@/components/layout'
 import { Button, Input, Modal, LoadingPage, Pagination, Badge } from '@/components/ui'
 import { apiService } from '@/services/api'
@@ -18,7 +19,8 @@ import {
   CheckCircleIcon,
   EyeIcon,
   PhoneIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  BuildingLibraryIcon
 } from '@heroicons/react/24/outline'
 
 interface TransactionFilters {
@@ -301,8 +303,8 @@ export default function TransactionsPage() {
               {/* Mobile Card View */}
               <div className="sm:hidden divide-y divide-slate-100">
                 {transactions.map((transaction) => (
-                  <div key={transaction.id} className="p-4 hover:bg-slate-50">
-                    <div className="flex items-start justify-between mb-3">
+                  <div key={transaction.id} className="p-3 hover:bg-slate-50">
+                    <div className="flex items-start justify-between mb-2.5">
                       <div className="flex-1">
                         <div className="text-sm font-medium text-slate-900 mb-1">{transaction.description}</div>
                         <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -318,7 +320,28 @@ export default function TransactionsPage() {
                       </span>
                     </div>
 
-                    <div className="space-y-2 mb-3">
+                    <div className="space-y-1.5 mb-2.5">
+                      {/* Bank Logo & Account */}
+                      <div className="flex items-center gap-2.5 p-2 bg-slate-50 rounded border border-slate-100">
+                        <div className="flex-shrink-0 h-8 w-8 bg-white rounded border border-slate-200 flex items-center justify-center">
+                          {transaction.Account?.Bank?.logoUrl ? (
+                            <Image
+                              src={transaction.Account.Bank.logoUrl}
+                              alt={transaction.Account.Bank.name}
+                              width={32}
+                              height={32}
+                              className="h-8 w-8 object-contain"
+                            />
+                          ) : (
+                            <BuildingLibraryIcon className="h-4 w-4 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-slate-900">{transaction.Account?.Bank?.name}</p>
+                          <p className="text-xs text-slate-500 font-mono">{transaction.Account?.accountNumber}</p>
+                        </div>
+                      </div>
+
                       {transaction.senderName && (
                         <div className="flex items-center gap-2 text-xs">
                           <UserIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
@@ -328,12 +351,6 @@ export default function TransactionsPage() {
                           )}
                         </div>
                       )}
-
-                      <div className="flex items-center gap-2 text-xs">
-                        <CreditCardIcon className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                        <span className="text-slate-700">{transaction.Account?.accountNumber}</span>
-                        <span className="text-slate-500">- {transaction.Account?.Bank?.name}</span>
-                      </div>
 
                       {transaction.flag && (
                         <div className="flex items-center gap-2">
@@ -345,7 +362,7 @@ export default function TransactionsPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
                       <div className={`font-mono text-base font-semibold ${
                         transaction.type === 'Kredit' ? 'text-emerald-600' : 'text-red-600'
                       }`}>
@@ -353,7 +370,7 @@ export default function TransactionsPage() {
                       </div>
                       <button
                         onClick={() => handleFlagTransaction(transaction)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+                        className="p-1.5 text-purple-600 hover:bg-purple-50 rounded"
                       >
                         <FlagIcon className="h-4 w-4" />
                       </button>
@@ -367,6 +384,7 @@ export default function TransactionsPage() {
                 <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
+                    <th className="px-3 py-3 text-center text-xs font-medium text-slate-700 w-12">No</th>
                     <th
                       className="px-4 py-3 text-left text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-100"
                       onClick={() => handleSort('tanggal')}
@@ -394,8 +412,11 @@ export default function TransactionsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {transactions.map((transaction) => (
+                  {transactions.map((transaction, index) => (
                     <tr key={transaction.id} className="hover:bg-slate-50">
+                      <td className="px-3 py-3 text-center text-xs font-medium text-slate-500">
+                        {((pagination.currentPage - 1) * pagination.itemsPerPage) + index + 1}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="text-xs text-slate-900">
                           {new Date(transaction.tanggal).toLocaleDateString('id-ID')}
@@ -429,8 +450,25 @@ export default function TransactionsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="text-xs text-slate-900">{transaction.Account?.accountNumber}</div>
-                        <div className="text-xs text-slate-500">{transaction.Account?.Bank?.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-shrink-0 h-6 w-6 bg-slate-50 rounded border border-slate-200 flex items-center justify-center">
+                            {transaction.Account?.Bank?.logoUrl ? (
+                              <Image
+                                src={transaction.Account.Bank.logoUrl}
+                                alt={transaction.Account.Bank.name}
+                                width={24}
+                                height={24}
+                                className="h-6 w-6 object-contain"
+                              />
+                            ) : (
+                              <BuildingLibraryIcon className="h-3 w-3 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs text-slate-900 font-medium">{transaction.Account?.accountNumber}</div>
+                            <div className="text-xs text-slate-500">{transaction.Account?.Bank?.name}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${

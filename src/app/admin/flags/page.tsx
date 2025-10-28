@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { AdminLayout } from '@/components/layout'
 import { Button, Input, Modal, LoadingPage, Badge } from '@/components/ui'
+import { CustomEmojiPicker } from '@/components/EmojiPicker'
 import { apiService } from '@/services/api'
 import { PlusIcon, PencilIcon, TrashIcon, FlagIcon, BellIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 
@@ -359,11 +360,10 @@ export default function FlagsPage() {
                 </div>
               </div>
 
-              <Input
-                label="Icon (Emoji)"
+              <CustomEmojiPicker
                 value={formData.icon}
-                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                placeholder="💚"
+                onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
+                label="Icon (Emoji)"
               />
 
               <div>
