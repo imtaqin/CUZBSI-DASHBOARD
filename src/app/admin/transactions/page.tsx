@@ -155,11 +155,11 @@ export default function TransactionsPage() {
 
     try {
       const response = await apiService.updateTransactionFlag(selectedTransaction.id, {
-        flag: data.flagId,
-        flagId: data.flagId,
-        phoneNumber: data.phoneNumber,
-        name: data.name,
-        notes: data.notes
+        flag: data.flagId || undefined,
+        flagId: data.flagId || undefined,
+        phoneNumber: data.phoneNumber || undefined,
+        name: data.name || undefined,
+        notes: data.notes || undefined
       })
 
       if (response.success) {
@@ -354,7 +354,11 @@ export default function TransactionsPage() {
 
                       {transaction.flag && (
                         <div className="flex items-center gap-2">
-                          <FlagIcon className="h-3.5 w-3.5 text-purple-600 flex-shrink-0" />
+                          {flags.find(f => f.id === transaction.flag)?.icon ? (
+                            <span className="text-sm">{flags.find(f => f.id === transaction.flag)?.icon}</span>
+                          ) : (
+                            <FlagIcon className="h-3.5 w-3.5 text-purple-600 flex-shrink-0" />
+                          )}
                           <span className="text-xs text-purple-700 font-medium">
                             {flags.find(f => f.id === transaction.flag)?.name || transaction.flag}
                           </span>
@@ -378,6 +382,36 @@ export default function TransactionsPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Mobile Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="sm:hidden px-3 py-3 border-t border-slate-200 bg-slate-50">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-slate-600">
+                      {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1}-{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} / {pagination.totalItems}
+                    </p>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handlePageChange(Math.max(1, pagination.currentPage - 1))}
+                        disabled={pagination.currentPage === 1}
+                        className="px-2 py-1 text-xs rounded border border-slate-300 text-slate-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Sebelumnya
+                      </button>
+                      <span className="px-2 py-1 text-xs font-medium text-slate-700 bg-white rounded border border-slate-300">
+                        {pagination.currentPage} / {pagination.totalPages}
+                      </span>
+                      <button
+                        onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))}
+                        disabled={pagination.currentPage === pagination.totalPages}
+                        className="px-2 py-1 text-xs rounded border border-slate-300 text-slate-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Berikutnya
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Desktop Table View */}
               <div className="hidden sm:block overflow-x-auto">
@@ -495,8 +529,12 @@ export default function TransactionsPage() {
                       </td>
                       <td className="px-4 py-3">
                         {transaction.flag ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-purple-50 text-purple-700 border border-purple-200">
-                            <FlagIcon className="h-3 w-3" />
+                          <span className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                            {flags.find(f => f.id === transaction.flag)?.icon ? (
+                              <span className="text-sm">{flags.find(f => f.id === transaction.flag)?.icon}</span>
+                            ) : (
+                              <FlagIcon className="h-3 w-3" />
+                            )}
                             {flags.find(f => f.id === transaction.flag)?.name || transaction.flag}
                           </span>
                         ) : (
@@ -595,22 +633,28 @@ export default function TransactionsPage() {
                     {flags?.length > 0 ? (
                       <div className="grid grid-cols-2 gap-2">
                         {flags.map(flag => (
-                          <label key={flag.id} className="flex items-center space-x-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                          <label key={flag.id} className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors hover:border-slate-300">
                             <input
                               type="radio"
                               value={flag.id}
                               {...registerFlag('flagId')}
-                              className="text-blue-600 focus:ring-blue-500"
+                              className="text-blue-600 focus:ring-blue-500 flex-shrink-0"
                             />
-                            <span
-                              className="w-3 h-3 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: flag.color || '#6b7280' }}
-                            ></span>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-medium text-slate-900 block truncate">{flag.name}</span>
-                              {flag.description && (
-                                <span className="text-xs text-slate-500 block truncate">{flag.description}</span>
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              {flag.icon ? (
+                                <span className="text-lg flex-shrink-0">{flag.icon}</span>
+                              ) : (
+                                <span
+                                  className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: flag.color || '#6b7280' }}
+                                ></span>
                               )}
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm font-medium text-slate-900 block truncate">{flag.name}</span>
+                                {flag.description && (
+                                  <span className="text-xs text-slate-500 block truncate">{flag.description}</span>
+                                )}
+                              </div>
                             </div>
                           </label>
                         ))}

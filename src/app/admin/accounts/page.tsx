@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { AdminLayout } from '@/components/layout'
 import { Card, CardContent, CardHeader, CardTitle, Button, Table, TableHeader, TableBody, TableHead, TableRow, TableCell, Badge, LoadingPage, Modal, Input, Select } from '@/components/ui'
 import { SyncNotification } from '@/components/SyncNotification'
@@ -20,7 +21,8 @@ import {
   PlayIcon,
   PlusIcon,
   PencilIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline'
 
 interface AccountFormData {
@@ -523,17 +525,60 @@ export default function AccountsPage() {
               </div>
             )}
 
+            {/* Bank Selection Grid */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-slate-700">Pilih Bank</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {banks.map(bank => {
+                  const isSelected = watchAccount('bankId') === bank.id
+                  return (
+                    <button
+                      key={bank.id}
+                      type="button"
+                      onClick={() => setValueAccount('bankId', bank.id)}
+                      className={`relative flex flex-col items-center justify-center p-2.5 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 bg-white hover:border-slate-300'
+                      }`}
+                    >
+                      {/* Selected Indicator */}
+                      {isSelected && (
+                        <div className="absolute top-1 right-1 bg-blue-500 rounded-full p-0.5">
+                          <CheckIcon className="h-2.5 w-2.5 text-white" />
+                        </div>
+                      )}
+
+                      {/* Bank Logo */}
+                      <div className="w-8 h-8 mb-1.5 flex items-center justify-center bg-slate-50 rounded border border-slate-200">
+                        {bank.logoUrl ? (
+                          <Image
+                            src={bank.logoUrl}
+                            alt={bank.name}
+                            width={32}
+                            height={32}
+                            className="h-7 w-7 object-contain"
+                          />
+                        ) : (
+                          <BuildingLibraryIcon className="h-4 w-4 text-slate-400" />
+                        )}
+                      </div>
+
+                      {/* Bank Info */}
+                      <div className="text-center min-w-0">
+                        <div className="text-xs font-semibold text-slate-900 truncate">{bank.name}</div>
+                        <div className="text-[10px] text-slate-500">{bank.code}</div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+              {accountErrors.bankId && (
+                <p className="text-xs text-red-600 mt-1">{accountErrors.bankId.message}</p>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <Select
-                options={banks.map(bank => ({
-                  value: bank.id.toString(),
-                  label: `${bank.name} (${bank.code})`
-                }))}
-                label="Bank"
-                value={watchAccount('bankId')?.toString() || ''}
-                onChange={(value) => setValueAccount('bankId', parseInt(value as string) || 0)}
-                error={accountErrors.bankId?.message}
-              />
 
               <Input
                 label="Nomor Rekening"

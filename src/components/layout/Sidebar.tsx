@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
@@ -224,15 +223,10 @@ function SidebarContent({ filteredItems, pathname, user, onLogout, onItemClick }
   return (
     <div className="flex flex-col h-full bg-white border-r border-slate-200 shadow-sm">
       {/* Logo/Brand */}
-      <div className="flex items-center gap-3 h-16 px-4 border-b border-slate-200 bg-white">
-        <Image
-          src="/image/logo-cuzbsi.png"
-          alt="CUZBSI Logo"
-          width={40}
-          height={40}
-          className="object-contain flex-shrink-0"
-        />
-        <h1 className="text-lg font-bold text-gray-800 tracking-tight truncate">CUZBSI</h1>
+      <div className="flex items-center justify-center h-16 px-4 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-green-50 flex-shrink-0">
+        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600 tracking-widest">
+          CUZBSI
+        </h1>
       </div>
 
       {/* Navigation */}

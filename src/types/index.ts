@@ -56,6 +56,9 @@ export interface ScrapingOption {
 }
 
 export interface Transaction {
+  senderPhone: any
+  senderName: any
+  isProcessed: unknown
   id: number
   tanggal: string
   description: string
@@ -69,6 +72,7 @@ export interface Transaction {
     id: number
     accountNumber: string
     Bank: {
+      logoUrl: any
       name: string
     }
   }
@@ -120,6 +124,9 @@ export interface DashboardData {
 }
 
 export interface PaginationInfo {
+  currentPage: unknown
+  itemsPerPage: number | undefined
+  totalItems: ReactNode
   page: number
   limit: number
   total: number
