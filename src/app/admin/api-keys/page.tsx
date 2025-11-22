@@ -66,6 +66,11 @@ export default function ApiKeysPage() {
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null)
   const [showKeys, setShowKeys] = useState<Record<number, boolean>>({})
 
+  // Debug log
+  useEffect(() => {
+    console.log('showModal state changed:', showModal)
+  }, [showModal])
+
   // Filters
   const [serviceFilter, setServiceFilter] = useState('')
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
@@ -189,7 +194,14 @@ export default function ApiKeysPage() {
                 <p className="text-xs text-slate-500">Kelola API keys untuk layanan eksternal</p>
               </div>
             </div>
-            <Button onClick={() => setShowModal(true)} className="btn-primary h-9 text-sm">
+            <Button
+              type="button"
+              onClick={() => {
+                console.log('Button clicked, setting showModal to true')
+                setShowModal(true)
+              }}
+              className="btn-primary h-9 text-sm"
+            >
               <PlusIcon className="h-4 w-4" />
               Tambah API Key
             </Button>
