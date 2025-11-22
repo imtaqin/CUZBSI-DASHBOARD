@@ -435,6 +435,209 @@ export default function ApiKeysPage() {
           )}
         </div>
       </div>
+
+      {/* Add/Edit API Key Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false)
+          setEditingKey(null)
+        }}
+        title={editingKey ? 'Edit API Key' : 'Tambah API Key'}
+      >
+        <ApiKeyForm
+          editingKey={editingKey}
+          onSuccess={() => {
+            setShowModal(false)
+            setEditingKey(null)
+            fetchApiKeys()
+          }}
+          onCancel={() => {
+            setShowModal(false)
+            setEditingKey(null)
+          }}
+        />
+      </Modal>
     </AdminLayout>
+  )
+}
+
+// API Key Form Component
+interface ApiKeyFormProps {
+  editingKey: ApiKey | null
+  onSuccess: () => void
+  onCancel: () => void
+}
+
+function ApiKeyForm({ editingKey, onSuccess, onCancel }: ApiKeyFormProps) {
+  const [formData, setFormData] = useState({
+    serviceName: editingKey?.serviceName || '',
+    name: editingKey?.name || '',
+    description: editingKey?.description || '',
+    apiKey: editingKey?.apiKey || '',
+    apiSecret: editingKey?.apiSecret || '',
+    apiUrl: editingKey?.apiUrl || '',
+    isActive: editingKey?.isActive ?? true,
+    isPrimary: editingKey?.isPrimary ?? false,
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      const response = editingKey
+        ? await apiService.updateApiKey(editingKey.id, formData)
+        : await apiService.createApiKey(formData)
+
+      if (response.success) {
+        onSuccess()
+      } else {
+        setError(response.message)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal menyimpan API key')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Layanan <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={formData.serviceName}
+          onChange={(e) => setFormData({ ...formData, serviceName: e.target.value })}
+          required
+          className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Pilih Layanan</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="openrouter">OpenRouter AI</option>
+          <option value="capsolver">CapSolver</option>
+          <option value="email">Email</option>
+          <option value="sms">SMS</option>
+          <option value="payment">Payment</option>
+          <option value="storage">Storage</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Nama <span className="text-red-500">*</span>
+        </label>
+        <Input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          placeholder="Contoh: WhatsApp API Production"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Deskripsi <span className="text-red-500">*</span>
+        </label>
+        <Input
+          type="text"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          required
+          placeholder="Deskripsi singkat tentang API key ini"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          API Key <span className="text-red-500">*</span>
+        </label>
+        <Input
+          type="text"
+          value={formData.apiKey}
+          onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+          required
+          placeholder="Masukkan API key"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          API Secret (Opsional)
+        </label>
+        <Input
+          type="text"
+          value={formData.apiSecret || ''}
+          onChange={(e) => setFormData({ ...formData, apiSecret: e.target.value })}
+          placeholder="Masukkan API secret jika ada"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          API URL <span className="text-red-500">*</span>
+        </label>
+        <Input
+          type="url"
+          value={formData.apiUrl}
+          onChange={(e) => setFormData({ ...formData, apiUrl: e.target.value })}
+          required
+          placeholder="https://api.example.com"
+        />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={formData.isActive}
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span className="text-sm text-slate-700">Aktifkan</span>
+        </label>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={formData.isPrimary}
+            onChange={(e) => setFormData({ ...formData, isPrimary: e.target.checked })}
+            className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+          />
+          <span className="text-sm text-slate-700">Jadikan Utama</span>
+        </label>
+      </div>
+
+      <div className="flex gap-2 pt-4 border-t border-slate-200">
+        <Button
+          type="button"
+          onClick={onCancel}
+          variant="outline"
+          className="flex-1"
+          disabled={isSubmitting}
+        >
+          Batal
+        </Button>
+        <Button
+          type="submit"
+          className="flex-1 btn-primary"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Menyimpan...' : editingKey ? 'Update' : 'Tambah'}
+        </Button>
+      </div>
+    </form>
   )
 }
