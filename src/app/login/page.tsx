@@ -136,25 +136,6 @@ export default function LoginPage() {
               {isLoading ? 'Memproses...' : 'Masuk'}
             </button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 font-medium mb-3">Akun Demo:</p>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Email:</span>
-                <code className="bg-gray-100 text-gray-800 px-3 py-1 rounded font-mono">
-                  admin@multimutasi.com
-                </code>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Password:</span>
-                <code className="bg-gray-100 text-gray-800 px-3 py-1 rounded font-mono">
-                  admin123
-                </code>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
