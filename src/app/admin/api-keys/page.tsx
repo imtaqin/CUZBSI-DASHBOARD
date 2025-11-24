@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { AdminLayout } from '@/components/layout'
-import { Button, LoadingPage, Modal, Input, Badge } from '@/components/ui'
+import { Button, LoadingPage, Modal, Input } from '@/components/ui'
 import { apiService } from '@/services/api'
 import {
   PlusIcon,
-  PencilIcon,
   TrashIcon,
   KeyIcon,
   CheckCircleIcon,
@@ -14,7 +13,6 @@ import {
   StarIcon,
   EyeIcon,
   EyeSlashIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
   GlobeAltIcon,
   ChatBubbleLeftIcon,
@@ -66,11 +64,6 @@ export default function ApiKeysPage() {
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null)
   const [showKeys, setShowKeys] = useState<Record<number, boolean>>({})
 
-  // Debug log
-  useEffect(() => {
-    console.log('showModal state changed:', showModal)
-  }, [showModal])
-
   // Filters
   const [serviceFilter, setServiceFilter] = useState('')
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
@@ -84,10 +77,13 @@ export default function ApiKeysPage() {
       setIsLoading(true)
       const response = await apiService.getApiKeys()
 
-      if (response.success) {
-        setApiKeys(response.data)
-        if (response.pagination) {
-          setPagination(response.pagination)
+      if (response.success && response.data) {
+        // API returns data as an array directly
+        const keys = Array.isArray(response.data) ? response.data : response.data.apiKeys || []
+        setApiKeys(keys)
+
+        if ('pagination' in response && response.pagination) {
+          setPagination(response.pagination as PaginationInfo)
         }
       }
     } catch (err) {
@@ -144,7 +140,7 @@ export default function ApiKeysPage() {
 
   const getServiceIcon = (serviceName: string) => {
     const iconClass = "h-6 w-6"
-    const icons: Record<string, JSX.Element> = {
+    const icons: Record<string, React.ReactElement> = {
       whatsapp: <ChatBubbleLeftIcon className={`${iconClass} text-green-600`} />,
       openrouter: <CpuChipIcon className={`${iconClass} text-purple-600`} />,
       capsolver: <ShieldCheckIcon className={`${iconClass} text-blue-600`} />,
@@ -196,10 +192,7 @@ export default function ApiKeysPage() {
             </div>
             <Button
               type="button"
-              onClick={() => {
-                console.log('Button clicked, setting showModal to true')
-                setShowModal(true)
-              }}
+              onClick={() => setShowModal(true)}
               className="btn-primary h-9 text-sm"
             >
               <PlusIcon className="h-4 w-4" />
@@ -449,27 +442,29 @@ export default function ApiKeysPage() {
       </div>
 
       {/* Add/Edit API Key Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false)
-          setEditingKey(null)
-        }}
-        title={editingKey ? 'Edit API Key' : 'Tambah API Key'}
-      >
-        <ApiKeyForm
-          editingKey={editingKey}
-          onSuccess={() => {
-            setShowModal(false)
-            setEditingKey(null)
-            fetchApiKeys()
-          }}
-          onCancel={() => {
+      {showModal && (
+        <Modal
+          isOpen={showModal}
+          onClose={() => {
             setShowModal(false)
             setEditingKey(null)
           }}
-        />
-      </Modal>
+          title={editingKey ? 'Edit API Key' : 'Tambah API Key'}
+        >
+          <ApiKeyForm
+            editingKey={editingKey}
+            onSuccess={() => {
+              setShowModal(false)
+              setEditingKey(null)
+              fetchApiKeys()
+            }}
+            onCancel={() => {
+              setShowModal(false)
+              setEditingKey(null)
+            }}
+          />
+        </Modal>
+      )}
     </AdminLayout>
   )
 }
@@ -494,6 +489,53 @@ function ApiKeyForm({ editingKey, onSuccess, onCancel }: ApiKeyFormProps) {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  // Service configurations with auto-fill data
+  const serviceConfigs: Record<string, { defaultUrl: string; description: string; requiresSecret?: boolean }> = {
+    whatsapp: {
+      defaultUrl: 'https://api.goowa.id',
+      description: 'WhatsApp messaging service via Goowa.id API'
+    },
+    openrouter: {
+      defaultUrl: 'https://openrouter.ai/api/v1',
+      description: 'AI-powered transaction classification using OpenRouter'
+    },
+    capsolver: {
+      defaultUrl: 'https://api.capsolver.com',
+      description: 'CAPTCHA solving service for bank automation'
+    },
+    email: {
+      defaultUrl: 'https://api.smtp.com',
+      description: 'Email notification service'
+    },
+    sms: {
+      defaultUrl: 'https://api.sms.com',
+      description: 'SMS notification service'
+    },
+    payment: {
+      defaultUrl: 'https://api.payment.com',
+      description: 'Payment gateway integration'
+    },
+    storage: {
+      defaultUrl: 'https://storage.googleapis.com',
+      description: 'Cloud storage service'
+    }
+  }
+
+  // Auto-fill URL and description when service is selected
+  const handleServiceChange = (serviceName: string) => {
+    const config = serviceConfigs[serviceName]
+    if (config && !editingKey) {
+      setFormData({
+        ...formData,
+        serviceName,
+        apiUrl: config.defaultUrl,
+        description: config.description
+      })
+    } else {
+      setFormData({ ...formData, serviceName })
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -531,19 +573,25 @@ function ApiKeyForm({ editingKey, onSuccess, onCancel }: ApiKeyFormProps) {
         </label>
         <select
           value={formData.serviceName}
-          onChange={(e) => setFormData({ ...formData, serviceName: e.target.value })}
+          onChange={(e) => handleServiceChange(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={!!editingKey}
+          className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
         >
           <option value="">Pilih Layanan</option>
-          <option value="whatsapp">WhatsApp</option>
+          <option value="whatsapp">WhatsApp (Goowa.id)</option>
           <option value="openrouter">OpenRouter AI</option>
           <option value="capsolver">CapSolver</option>
           <option value="email">Email</option>
           <option value="sms">SMS</option>
-          <option value="payment">Payment</option>
-          <option value="storage">Storage</option>
+          <option value="payment">Payment Gateway</option>
+          <option value="storage">Cloud Storage</option>
         </select>
+        {formData.serviceName && (
+          <p className="text-xs text-slate-500 mt-1">
+            {serviceConfigs[formData.serviceName]?.description}
+          </p>
+        )}
       </div>
 
       <div>
@@ -561,15 +609,18 @@ function ApiKeyForm({ editingKey, onSuccess, onCancel }: ApiKeyFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">
-          Deskripsi <span className="text-red-500">*</span>
+          API URL <span className="text-red-500">*</span>
         </label>
         <Input
-          type="text"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          type="url"
+          value={formData.apiUrl}
+          onChange={(e) => setFormData({ ...formData, apiUrl: e.target.value })}
           required
-          placeholder="Deskripsi singkat tentang API key ini"
+          placeholder="https://api.example.com"
+          className="bg-slate-50"
+          readOnly={!editingKey && !!formData.serviceName}
         />
+        <p className="text-xs text-slate-500 mt-1">Auto-filled based on service selection</p>
       </div>
 
       <div>
@@ -595,19 +646,7 @@ function ApiKeyForm({ editingKey, onSuccess, onCancel }: ApiKeyFormProps) {
           onChange={(e) => setFormData({ ...formData, apiSecret: e.target.value })}
           placeholder="Masukkan API secret jika ada"
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          API URL <span className="text-red-500">*</span>
-        </label>
-        <Input
-          type="url"
-          value={formData.apiUrl}
-          onChange={(e) => setFormData({ ...formData, apiUrl: e.target.value })}
-          required
-          placeholder="https://api.example.com"
-        />
+        <p className="text-xs text-slate-500 mt-1">Only required for some services</p>
       </div>
 
       <div className="flex items-center gap-4">
