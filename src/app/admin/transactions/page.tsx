@@ -154,12 +154,14 @@ export default function TransactionsPage() {
     if (!selectedTransaction) return
 
     try {
-      const response = await apiService.updateTransactionFlag(selectedTransaction.id, {
-        flagId: data.flagId || undefined,
-        phoneNumber: data.phoneNumber || undefined,
-        name: data.name || undefined,
-        notes: data.notes || undefined
-      })
+      // Build the payload, only include non-empty values
+      const payload: { flagId?: string; phoneNumber?: string; name?: string; notes?: string } = {}
+      if (data.flagId) payload.flagId = data.flagId
+      if (data.phoneNumber) payload.phoneNumber = data.phoneNumber
+      if (data.name) payload.name = data.name
+      if (data.notes) payload.notes = data.notes
+
+      const response = await apiService.updateTransactionFlag(selectedTransaction.id, payload)
 
       if (response.success) {
         await fetchTransactions()
