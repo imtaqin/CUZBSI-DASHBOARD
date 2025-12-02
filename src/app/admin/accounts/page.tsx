@@ -479,17 +479,19 @@ export default function AccountsPage() {
 
                 {/* Card Footer - Actions */}
                 <div className="p-4 border-t border-slate-100 bg-slate-50 flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSyncAccount(account.id)}
-                    loading={syncingAccounts.has(account.id)}
-                    disabled={!account.isActive}
-                    className="flex-1"
-                  >
-                    <PlayIcon className="h-3.5 w-3.5 mr-1" />
-                    Sync
-                  </Button>
+                  {account.ScrapingOption?.isActive && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSyncAccount(account.id)}
+                      loading={syncingAccounts.has(account.id)}
+                      disabled={!account.isActive}
+                      className="flex-1"
+                    >
+                      <PlayIcon className="h-3.5 w-3.5 mr-1" />
+                      Sync
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
