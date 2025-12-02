@@ -155,7 +155,6 @@ export default function TransactionsPage() {
 
     try {
       const response = await apiService.updateTransactionFlag(selectedTransaction.id, {
-        flag: data.flagId || undefined,
         flagId: data.flagId || undefined,
         phoneNumber: data.phoneNumber || undefined,
         name: data.name || undefined,

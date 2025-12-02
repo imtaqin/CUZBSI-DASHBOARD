@@ -144,10 +144,6 @@ export default function ApiKeysPage() {
       whatsapp: <ChatBubbleLeftIcon className={`${iconClass} text-green-600`} />,
       openrouter: <CpuChipIcon className={`${iconClass} text-purple-600`} />,
       capsolver: <ShieldCheckIcon className={`${iconClass} text-blue-600`} />,
-      email: <GlobeAltIcon className={`${iconClass} text-slate-600`} />,
-      sms: <ChatBubbleLeftIcon className={`${iconClass} text-slate-600`} />,
-      payment: <KeyIcon className={`${iconClass} text-amber-600`} />,
-      storage: <KeyIcon className={`${iconClass} text-slate-600`} />,
       default: <KeyIcon className={`${iconClass} text-slate-600`} />
     }
     return icons[serviceName.toLowerCase()] || icons.default
@@ -503,22 +499,6 @@ function ApiKeyForm({ editingKey, onSuccess, onCancel }: ApiKeyFormProps) {
     capsolver: {
       defaultUrl: 'https://api.capsolver.com',
       description: 'CAPTCHA solving service for bank automation'
-    },
-    email: {
-      defaultUrl: 'https://api.smtp.com',
-      description: 'Email notification service'
-    },
-    sms: {
-      defaultUrl: 'https://api.sms.com',
-      description: 'SMS notification service'
-    },
-    payment: {
-      defaultUrl: 'https://api.payment.com',
-      description: 'Payment gateway integration'
-    },
-    storage: {
-      defaultUrl: 'https://storage.googleapis.com',
-      description: 'Cloud storage service'
     }
   }
 
@@ -582,10 +562,6 @@ function ApiKeyForm({ editingKey, onSuccess, onCancel }: ApiKeyFormProps) {
           <option value="whatsapp">WhatsApp (Goowa.id)</option>
           <option value="openrouter">OpenRouter AI</option>
           <option value="capsolver">CapSolver</option>
-          <option value="email">Email</option>
-          <option value="sms">SMS</option>
-          <option value="payment">Payment Gateway</option>
-          <option value="storage">Cloud Storage</option>
         </select>
         {formData.serviceName && (
           <p className="text-xs text-slate-500 mt-1">
