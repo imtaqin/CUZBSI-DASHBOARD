@@ -7,7 +7,6 @@ import { Button, Input, Modal, LoadingPage, Pagination, Badge } from '@/componen
 import { apiService } from '@/services/api'
 import { formatCurrency, debounce } from '@/lib/utils'
 import type { Transaction, Account, PaginationInfo } from '@/types'
-import { useForm } from 'react-hook-form'
 import {
   FunnelIcon,
   FlagIcon,
@@ -54,8 +53,12 @@ export default function TransactionsPage() {
   const [sortConfig, setSortConfig] = useState({ field: 'tanggal', direction: 'desc' as 'asc' | 'desc' })
   const [flagModalOpen, setFlagModalOpen] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-
-  const { register: registerFlag, handleSubmit: handleFlagSubmit, reset: resetFlag, setValue: setFlagValue, watch: watchFlag } = useForm<FlagFormData>()
+  const [flagFormData, setFlagFormData] = useState<FlagFormData>({
+    flagId: '',
+    phoneNumber: '',
+    name: '',
+    notes: ''
+  })
 
   const debouncedSearch = debounce((searchTerm: string) => {
     setFilters(prev => ({ ...prev, search: searchTerm }))
@@ -136,33 +139,27 @@ export default function TransactionsPage() {
 
   const handleFlagTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction)
-    // Pre-fill flag if already set
-    if (transaction.flag) {
-      setFlagValue('flagId', transaction.flag)
-    }
-    // Pre-fill phone and name if available
-    if (transaction.senderPhone) {
-      setFlagValue('phoneNumber', transaction.senderPhone)
-    }
-    if (transaction.senderName) {
-      setFlagValue('name', transaction.senderName)
-    }
+    // Pre-fill form data
+    setFlagFormData({
+      flagId: transaction.flag || '',
+      phoneNumber: transaction.senderPhone || '',
+      name: transaction.senderName || '',
+      notes: ''
+    })
     setFlagModalOpen(true)
   }
 
-  const onSubmitFlag = async (data: FlagFormData) => {
+  const onSubmitFlag = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!selectedTransaction) return
-
-    // Get the current watched value of flagId as fallback
-    const currentFlagId = data.flagId || watchFlag('flagId')
 
     try {
       // Build the payload, only include non-empty values
       const payload: { flagId?: string; phoneNumber?: string; name?: string; notes?: string } = {}
-      if (currentFlagId) payload.flagId = currentFlagId
-      if (data.phoneNumber) payload.phoneNumber = data.phoneNumber
-      if (data.name) payload.name = data.name
-      if (data.notes) payload.notes = data.notes
+      if (flagFormData.flagId) payload.flagId = flagFormData.flagId
+      if (flagFormData.phoneNumber) payload.phoneNumber = flagFormData.phoneNumber
+      if (flagFormData.name) payload.name = flagFormData.name
+      if (flagFormData.notes) payload.notes = flagFormData.notes
 
       console.log('Submitting flag with payload:', payload)
 
@@ -171,7 +168,7 @@ export default function TransactionsPage() {
       if (response.success) {
         await fetchTransactions()
         setFlagModalOpen(false)
-        resetFlag()
+        setFlagFormData({ flagId: '', phoneNumber: '', name: '', notes: '' })
         setSelectedTransaction(null)
       }
     } catch (error) {
@@ -584,7 +581,7 @@ export default function TransactionsPage() {
           onClose={() => {
             setFlagModalOpen(false)
             setSelectedTransaction(null)
-            resetFlag()
+            setFlagFormData({ flagId: '', phoneNumber: '', name: '', notes: '' })
           }}
           title="Kelola Penanda Transaksi"
           size="lg"
@@ -631,7 +628,7 @@ export default function TransactionsPage() {
               </div>
 
               {/* Flag Selection Form */}
-              <form onSubmit={handleFlagSubmit(onSubmitFlag)} className="space-y-6">
+              <form onSubmit={onSubmitFlag} className="space-y-6">
                 {/* Flags from API */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium text-slate-700">Pilih Penanda</label>
@@ -639,11 +636,20 @@ export default function TransactionsPage() {
                     {flags?.length > 0 ? (
                       <div className="grid grid-cols-2 gap-2">
                         {flags.map(flag => (
-                          <label key={flag.id} className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors hover:border-slate-300">
+                          <label
+                            key={flag.id}
+                            className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                              flagFormData.flagId === flag.id
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                            }`}
+                          >
                             <input
                               type="radio"
-                              {...registerFlag('flagId')}
+                              name="flagId"
                               value={flag.id}
+                              checked={flagFormData.flagId === flag.id}
+                              onChange={(e) => setFlagFormData({ ...flagFormData, flagId: e.target.value })}
                               className="text-blue-600 focus:ring-blue-500 flex-shrink-0"
                             />
                             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -673,11 +679,19 @@ export default function TransactionsPage() {
 
                 {/* Remove Flag Option */}
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                  <label
+                    className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      flagFormData.flagId === ''
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
                     <input
                       type="radio"
-                      {...registerFlag('flagId')}
+                      name="flagId"
                       value=""
+                      checked={flagFormData.flagId === ''}
+                      onChange={(e) => setFlagFormData({ ...flagFormData, flagId: e.target.value })}
                       className="text-blue-600 focus:ring-blue-500"
                     />
                     <XMarkIcon className="h-4 w-4 text-slate-400" />
@@ -696,14 +710,16 @@ export default function TransactionsPage() {
                     <Input
                       label="Nomor Telepon"
                       placeholder="08123456789"
-                      {...registerFlag('phoneNumber')}
+                      value={flagFormData.phoneNumber}
+                      onChange={(e) => setFlagFormData({ ...flagFormData, phoneNumber: e.target.value })}
                       className="bg-white"
                     />
 
                     <Input
                       label="Nama"
                       placeholder="Nama penerima"
-                      {...registerFlag('name')}
+                      value={flagFormData.name}
+                      onChange={(e) => setFlagFormData({ ...flagFormData, name: e.target.value })}
                       className="bg-white"
                     />
                   </div>
@@ -720,7 +736,8 @@ export default function TransactionsPage() {
                     placeholder="Tambahkan catatan untuk transaksi ini..."
                     className="w-full p-3 border border-slate-200 rounded-lg resize-none text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={3}
-                    {...registerFlag('notes')}
+                    value={flagFormData.notes}
+                    onChange={(e) => setFlagFormData({ ...flagFormData, notes: e.target.value })}
                   />
                 </div>
 
