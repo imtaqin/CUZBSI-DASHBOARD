@@ -55,7 +55,7 @@ export default function TransactionsPage() {
   const [flagModalOpen, setFlagModalOpen] = useState(false)
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
 
-  const { register: registerFlag, handleSubmit: handleFlagSubmit, reset: resetFlag, setValue: setFlagValue } = useForm<FlagFormData>()
+  const { register: registerFlag, handleSubmit: handleFlagSubmit, reset: resetFlag, setValue: setFlagValue, watch: watchFlag } = useForm<FlagFormData>()
 
   const debouncedSearch = debounce((searchTerm: string) => {
     setFilters(prev => ({ ...prev, search: searchTerm }))
@@ -153,13 +153,18 @@ export default function TransactionsPage() {
   const onSubmitFlag = async (data: FlagFormData) => {
     if (!selectedTransaction) return
 
+    // Get the current watched value of flagId as fallback
+    const currentFlagId = data.flagId || watchFlag('flagId')
+
     try {
       // Build the payload, only include non-empty values
       const payload: { flagId?: string; phoneNumber?: string; name?: string; notes?: string } = {}
-      if (data.flagId) payload.flagId = data.flagId
+      if (currentFlagId) payload.flagId = currentFlagId
       if (data.phoneNumber) payload.phoneNumber = data.phoneNumber
       if (data.name) payload.name = data.name
       if (data.notes) payload.notes = data.notes
+
+      console.log('Submitting flag with payload:', payload)
 
       const response = await apiService.updateTransactionFlag(selectedTransaction.id, payload)
 
@@ -637,8 +642,8 @@ export default function TransactionsPage() {
                           <label key={flag.id} className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors hover:border-slate-300">
                             <input
                               type="radio"
-                              value={flag.id}
                               {...registerFlag('flagId')}
+                              value={flag.id}
                               className="text-blue-600 focus:ring-blue-500 flex-shrink-0"
                             />
                             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -671,8 +676,8 @@ export default function TransactionsPage() {
                   <label className="flex items-center space-x-2 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                     <input
                       type="radio"
-                      value=""
                       {...registerFlag('flagId')}
+                      value=""
                       className="text-blue-600 focus:ring-blue-500"
                     />
                     <XMarkIcon className="h-4 w-4 text-slate-400" />

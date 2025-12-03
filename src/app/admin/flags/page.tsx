@@ -313,22 +313,46 @@ export default function FlagsPage() {
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="ID Penanda"
-                value={formData.id}
-                onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                placeholder="donatur_tetap"
-                required
-                disabled={!!editingFlag}
-              />
+              <div className="col-span-2">
+                <Input
+                  label="Nama Penanda"
+                  value={formData.name}
+                  onChange={(e) => {
+                    const name = e.target.value
+                    // Auto-generate ID from name (only when creating new flag)
+                    const autoId = name
+                      .toLowerCase()
+                      .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+                      .replace(/\s+/g, '_') // Replace spaces with underscores
+                      .replace(/_+/g, '_') // Remove duplicate underscores
+                      .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+                    setFormData({
+                      ...formData,
+                      name,
+                      // Only auto-generate ID if not editing
+                      ...(editingFlag ? {} : { id: autoId })
+                    })
+                  }}
+                  placeholder="Donatur Tetap"
+                  required
+                />
+              </div>
 
-              <Input
-                label="Nama Penanda"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Donatur Tetap"
-                required
-              />
+              {editingFlag ? (
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">ID Penanda</label>
+                  <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-md text-sm text-slate-600 font-mono">
+                    {formData.id}
+                  </div>
+                </div>
+              ) : (
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">ID Penanda (auto-generated)</label>
+                  <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-700 font-mono">
+                    {formData.id || <span className="text-slate-400 italic">Ketik nama untuk generate ID</span>}
+                  </div>
+                </div>
+              )}
 
               <div className="col-span-2">
                 <Input
